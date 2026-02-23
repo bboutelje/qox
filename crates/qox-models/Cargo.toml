@@ -1,6 +1,0 @@
-[package]
-name = "qox-models"
-version.workspace = true
-edition.workspace = true
-
-[dependencies]
