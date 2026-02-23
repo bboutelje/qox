@@ -1,0 +1,13 @@
+[package]
+name = "qox-core"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+chrono = { workspace = true }
+libm = { workspace = true }
+thiserror = "1"
+simba = "0.9"
+nalgebra = "0.34" # or the version used by ad_trait
+ndarray = "0.17"
+num-dual = { workspace = true }
