@@ -1,13 +1,15 @@
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 use chrono::NaiveDate;
-use crate::error::CurveError;
-use crate::period::{DayCountConvention, PeriodCalculator};
-use crate::rate::{InterestRate, Discountable, Compounding, Frequency};
-use crate::interpolate::{Interpolator1D, LinearInterpolator};
-use crate::tenor::Tenor;
+use crate::core::error::CurveError;
+use crate::core::period::{DayCountConvention, PeriodCalculator};
+use crate::core::tenor::Tenor;
+use crate::math::interpolate::LinearInterpolator;
 use crate::traits::rate_curve::RateCurve;
 use crate::traits::real::Real;
+use crate::core::rate::{Compounding, Frequency, InterestRate};
+use crate::core::rate::Discountable;
+use crate::math::interpolate::Interpolator1D;
 
 #[derive(Debug, Clone)]
 pub struct FlatRateCurve<'a, T: Real> {

@@ -1,11 +1,6 @@
 use chrono::NaiveDate;
 
-use crate::conventions::DayCountConvention;
-use crate::error::CurveError;
-use crate::interpolate::{LinearInterpolator};
-use crate::period::PeriodCalculator;
-use crate::tenor::Tenor;
-use crate::traits::real::Real;
+use crate::{core::{error::CurveError, period::{DayCountConvention, PeriodCalculator}, tenor::Tenor}, math::interpolate::LinearInterpolator, traits::real::Real};
 
 
 /// Trait for volatility surfaces (generic over T for future AD support)

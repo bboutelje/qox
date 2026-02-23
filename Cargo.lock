@@ -391,7 +391,7 @@ dependencies = [
 
 [[package]]
 name = "qox-core"
-version = "0.1.0"
+version = "0.0.1-alpha"
 dependencies = [
  "chrono",
  "libm",
@@ -404,7 +404,7 @@ dependencies = [
 
 [[package]]
 name = "qox-models"
-version = "0.1.0"
+version = "0.0.1-alpha"
 
 [[package]]
 name = "qox-rates"

@@ -1,6 +1,6 @@
 use chrono::{Datelike, NaiveDate, Weekday};
-use crate::conventions::BusinessDayConvention;
-use crate::tenor::Tenor;
+use crate::core::conventions::BusinessDayConvention;
+use crate::core::tenor::Tenor;
 
 pub trait Calendar: std::fmt::Debug {
     fn name(&self) -> &str;

@@ -1,6 +1,6 @@
 use std::ops::{Add, Div, Mul, Sub};
 
-use crate::{error::InterpolationError, traits::real::Real};
+use crate::{core::error::InterpolationError, traits::real::Real};
 
 pub trait Interpolator1D<T> {
     fn interpolate(&self, x: &T) -> T;

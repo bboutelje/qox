@@ -1,7 +1,6 @@
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
-use crate::conventions::DayCountConvention;
-use crate::traits::real::Real;
+use crate::{core::period::DayCountConvention, traits::real::Real};
 
 #[derive(Debug, Clone, Copy)]
 pub enum Compounding {

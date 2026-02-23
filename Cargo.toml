@@ -1,6 +1,14 @@
 [workspace.package]
-version = "0.1.0"
+version = "0.0.1-alpha"
 edition = "2024"
+authors = ["Bruce Boutelje"]
+description = "Quantitative finance library for Rust (Alpha)"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/bboutelje/qox"
+readme = "README.md"
+keywords = ["quant", "finance", "trading", "mathematics"]
+categories = ["science", "mathematics", "finance", "algorithms"]
+
 
 [workspace]
 members = [
