@@ -17,3 +17,11 @@ simba = "0.9"
 nalgebra = "0.34" # or the version used by ad_trait
 ndarray = "0.17"
 num-dual = { workspace = true }
+
+[[example]]
+name = "fdm_demo"
+path = "examples/fdm_demo.rs"
+
+[[example]]
+name = "demo"
+path = "examples/demo.rs"

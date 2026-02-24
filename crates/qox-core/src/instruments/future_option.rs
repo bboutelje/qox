@@ -8,16 +8,16 @@ pub enum OptionType {
 }
 
 #[derive(Debug, Clone)]
-pub struct FutureOption<T: Real> {
-    pub strike: T,
+pub struct FutureOption {
+    pub strike: f64,
     pub expiry: DateTime<Utc>,
     pub option_type: OptionType,
 }
 
-impl<T: Real> FutureOption<T> {
-    pub fn new<I: Into<T>>(strike: I, expiry: DateTime<Utc>, option_type: OptionType) -> Self {
+impl FutureOption {
+    pub fn new(strike: f64, expiry: DateTime<Utc>, option_type: OptionType) -> Self {
         Self {
-            strike: strike.into(),
+            strike: strike,
             expiry,
             option_type,
         }
@@ -38,11 +38,11 @@ impl<T: Real> FutureOption<T> {
     // }
 }
 
-impl<T: Real> Instrument<T> for FutureOption<T> {}
+impl Instrument for FutureOption {}
 
-impl<T: Real> OptionInstrument<T> for FutureOption<T> {
-    fn strike(&self) -> T {
-        self.strike.clone()
+impl<T: Real> OptionInstrument<T> for FutureOption {
+    fn strike(&self) -> f64 {
+        self.strike
     }
 
     fn is_call(&self) -> bool {
@@ -54,6 +54,6 @@ impl<T: Real> OptionInstrument<T> for FutureOption<T> {
         let duration = self.expiry.signed_duration_since(now);
         let seconds = duration.num_seconds() as f64;
         let years = seconds / (365.25 * 24.0 * 3600.0);
-        T::from_f64(years)
+        Real::from_f64(years)
     }
 }

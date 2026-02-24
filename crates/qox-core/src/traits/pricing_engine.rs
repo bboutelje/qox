@@ -6,7 +6,7 @@ use crate::traits::real::Real;
 
 pub trait PricingEngine<I, T, RC>
 where
-    I: Instrument<T>,
+    I: Instrument,
     T: Real,
     RC: RateCurve<T>,
 {
@@ -29,7 +29,7 @@ pub struct OptionPricingResult<T: Real> {
 
 pub trait OptionPricingEngine<I, T, RC, VS>
 where
-    I: Instrument<T>,
+    I: Instrument,
     T: Real,
     RC: RateCurve<T>,
     VS: VolSurface<T>,

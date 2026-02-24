@@ -5,6 +5,11 @@ use crate::traits::real::Real;
 impl Real for f64 {
     fn from_f64(val: f64) -> Self { val }
     fn to_f64(&self) -> f64 { *self }
+
+    fn max(&self, other: &Self) -> Self {
+        f64::max(*self, *other)
+    }
+
     fn exp(&self) -> Self { f64::exp(*self) }
     fn ln(&self) -> Self { f64::ln(*self) }
     fn sqrt(&self) -> Self { f64::sqrt(*self) }

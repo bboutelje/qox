@@ -15,6 +15,13 @@ impl<const N: usize> Real for Dual2Vec64<N> {
         self.0.re()
     }
 
+    fn max(&self, other: &Self) -> Self {
+        if self.0.re() >= other.0.re() {
+            *self
+        } else {
+            *other
+        }
+    }
     fn exp(&self) -> Self {
         Dual2Vec64(self.0.exp())
     }

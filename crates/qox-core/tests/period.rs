@@ -1,9 +1,9 @@
 // tests/thirty360_us.rs
 
 use chrono::{Datelike, NaiveDate};
-use qox_core::core::period::{DefaultPeriodCalculator, PeriodCalculator};
-use qox_core::core::conventions::{DayCountConvention, Thirty360Subtype};
-use qox_core::traits::calendar::Calendar;
+use qox::core::period::{DefaultPeriodCalculator, PeriodCalculator};
+use qox::core::conventions::{DayCountConvention, Thirty360Subtype};
+use qox::traits::calendar::Calendar;
 
 fn date(y: i32, m: u32, d: u32) -> NaiveDate {
     NaiveDate::from_ymd_opt(y, m, d).unwrap()

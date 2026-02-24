@@ -1,10 +1,10 @@
 use chrono::{Duration, Utc};
 use num_dual::{Dual2Vec};
-use qox_core::instruments::future_option::{FutureOption, OptionType};
-use qox_core::market::{market_data::OptionMarketData, rate_curve::ContinuousRateCurve, vol_surface::FlatVolSurface};
-use qox_core::real::dual2_vec::Dual2Vec64;
-use qox_core::traits::pricing_engine::OptionPricingEngine;
-use qox_core::engines::black::BlackEngine;
+use qox::instruments::future_option::{FutureOption, OptionType};
+use qox::market::{market_data::OptionMarketData, rate_curve::ContinuousRateCurve, vol_surface::FlatVolSurface};
+use qox::real::dual2_vec::Dual2Vec64;
+use qox::traits::pricing_engine::OptionPricingEngine;
+use qox::engines::black::BlackEngine;
 
 pub fn main() {
 

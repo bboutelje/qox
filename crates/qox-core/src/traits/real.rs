@@ -14,6 +14,8 @@ pub trait Real:
 {
     fn from_f64(v: f64) -> Self;
     fn to_f64(&self) -> f64;
+    fn max(&self, other: &Self) -> Self;
+
     fn exp(&self) -> Self;
     fn ln(&self) -> Self;
     fn sqrt(&self) -> Self;
