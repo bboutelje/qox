@@ -12,7 +12,7 @@ categories = ["science", "mathematics", "finance", "algorithms"]
 
 [workspace]
 members = [
-    "crates/*",
+    "qox",
 ]
 resolver = "3"
 
