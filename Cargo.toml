@@ -22,3 +22,5 @@ qox-core = { path = "crates/qox-core" }
 qox-autodiff = { path = "crates/qox-autodiff" }
 libm = "0.2"
 num-dual = "0.13"
+ad_trait = "0.2"
+serde = "1.0.228"

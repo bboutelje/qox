@@ -4,20 +4,20 @@ use crate::traits::instrument::Instrument;
 use crate::traits::rate_curve::RateCurve;
 use crate::traits::real::Real;
 
-pub trait PricingEngine<I, T, RC>
+pub trait Evaluable<I, T, RC>
 where
     I: Instrument,
     T: Real,
     RC: RateCurve<T>,
 {
-    fn price(
+    fn evaluate(
         &self,
         instrument: &I,
         market: &MarketData<T, RC>,
     ) -> T;
 }
 
-pub struct OptionPricingResult<T: Real> {
+pub struct OptionEvaluation<T: Real> {
     pub price: T,
     pub delta: T,
     pub gamma: T,
@@ -27,14 +27,14 @@ pub struct OptionPricingResult<T: Real> {
 }
 
 
-pub trait OptionPricingEngine<I, T, RC, VS>
+pub trait OptionEvaluable<I, T, RC, VS>
 where
     I: Instrument,
     T: Real,
     RC: RateCurve<T>,
     VS: VolSurface<T>,
 {
-    fn price(
+    fn evaluate(
         &self,
         instrument: &I,
         market: &OptionMarketData<T, RC, VS>,
@@ -43,13 +43,13 @@ where
     //     &self,
     //     instrument: &I,
     //     market: &OptionMarketData<T, RC, VS>,
-    // ) -> OptionPricingResult<T>;
+    // ) -> OptionEvaluation<T>;
 
-    fn price_and_greeks(
+    fn evaluate_all(
         &self,
         instrument: &I,
         market: &OptionMarketData<T, RC, VS>,
-    ) -> OptionPricingResult<f64>
+    ) -> OptionEvaluation<f64>
     where
         RC: RateCurve<T>,
         VS: VolSurface<T>;

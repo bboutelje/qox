@@ -3,8 +3,8 @@ use num_dual::{Dual2Vec};
 use qox::instruments::future_option::{FutureOption, OptionType};
 use qox::market::{market_data::OptionMarketData, rate_curve::ContinuousRateCurve, vol_surface::FlatVolSurface};
 use qox::real::dual2_vec::Dual2Vec64;
-use qox::traits::pricing_engine::OptionPricingEngine;
-use qox::engines::black::BlackEngine;
+use qox::traits::pricing_engine::OptionEvaluable;
+use qox::evaluators::black::BlackEngine;
 
 pub fn main() {
 
@@ -41,7 +41,7 @@ pub fn main() {
         OptionType::Put,   // is_call
     );
     
-    let result = engine.price_and_greeks(&option, &market);
+    let result = engine.evaluate_all(&option, &market);
     
     println!("Black Put Price: {:.4}", result.price);
     println!("Delta: {:.4}", result.delta);

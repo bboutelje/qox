@@ -14,9 +14,11 @@ chrono = { workspace = true }
 libm = { workspace = true }
 thiserror = "1"
 simba = "0.9"
-nalgebra = "0.34" # or the version used by ad_trait
+nalgebra = { version = "0.34", features = ["serde-serialize"] }
 ndarray = "0.17"
 num-dual = { workspace = true }
+ad_trait = { workspace = true }
+serde = { workspace = true }
 
 [[example]]
 name = "fdm_demo"

@@ -2,9 +2,9 @@ use std::ops::{Add, Div, Mul, Sub};
 use crate::solvers::fdm::operators::{TridiagonalCoeffs, solve_tridiagonal};
 use crate::market::{market_data::OptionMarketData, vol_surface::VolSurface};
 use crate::solvers::fdm::grid::FdmGrid;
-use crate::traits::{instrument::OptionInstrument, pricing_engine::OptionPricingEngine, rate_curve::RateCurve, real::Real};
+use crate::traits::{instrument::OptionInstrument, pricing_engine::OptionEvaluable, rate_curve::RateCurve, real::Real};
 
-pub struct FdmEngine {
+pub struct Evaluator {
     pub config: FdmConfig,
 }
 
@@ -14,7 +14,7 @@ pub struct FdmConfig {
     pub damping_steps: usize,
 }
 
-impl<I, RC, VS, T> OptionPricingEngine<I, T, RC, VS> for FdmEngine
+impl<I, RC, VS, T> OptionEvaluable<I, T, RC, VS> for Evaluator
 where
     T: Real,
     I: OptionInstrument<T>,
@@ -24,7 +24,7 @@ where
                    Mul<&'a T, Output = T> + Div<&'a T, Output = T> +
                    std::ops::Neg<Output = T>
 {
-    fn price(&self, instrument: &I, market: &OptionMarketData<T, RC, VS>) -> T {
+    fn evaluate(&self, instrument: &I, market: &OptionMarketData<T, RC, VS>) -> T {
         
         let s_min = T::from_f64(0.01); 
         let s_max = &market.spot_price * &T::from_f64(3.0); 
@@ -65,11 +65,11 @@ where
     //     self.interpolate(&grid, &v, &market.spot_price)
     // }
     
-    fn price_and_greeks(
+    fn evaluate_all(
         &self,
         _instrument: &I,
         _market: &OptionMarketData<T, RC, VS>,
-    ) -> crate::traits::pricing_engine::OptionPricingResult<f64>
+    ) -> crate::traits::pricing_engine::OptionEvaluation<f64>
     where
         RC: RateCurve<T>,
         VS: VolSurface<T> {
@@ -77,7 +77,7 @@ where
     }
 }
 
-impl FdmEngine {
+impl Evaluator {
     /// 1. Lines up with: self.initialize_payoff(instrument, &grid)
     fn initialize_payoff<T, I>(
         &self, 

@@ -4,3 +4,4 @@ pub mod pricing_engine;
 pub mod real;
 pub mod rate_curve;
 pub mod boundary;
+pub mod fdm_1d_mesher;

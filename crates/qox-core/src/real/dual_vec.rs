@@ -1,4 +1,4 @@
-use std::{ops::{Add, Div, Mul, Neg, Sub}};
+use std::{cmp::Ordering, ops::{Add, Div, Mul, Neg, Sub}};
 use crate::traits::real::Real;
 use num_dual::{Derivative, DualNum, DualStruct, DualVec};
 use nalgebra::Const;
@@ -132,5 +132,12 @@ impl<'a, const N: usize> Neg for &'a DualVec64<N> {
     type Output = DualVec64<N>;
     fn neg(self) -> DualVec64<N> {
         DualVec64(-self.0)
+    }
+}
+
+impl<const N: usize> PartialOrd for DualVec64<N> {
+    #[inline]
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.0.re().partial_cmp(&other.0.re())
     }
 }

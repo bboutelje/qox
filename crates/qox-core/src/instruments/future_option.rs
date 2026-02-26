@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use crate::{traits::{instrument::{Instrument, OptionInstrument}, real::Real}};
+use crate::{core::period::{DayCountConvention, DefaultPeriodCalculator, PeriodCalculator}, traits::{instrument::{Instrument, OptionInstrument}, real::Real}};
 
 #[derive(Debug, Clone, Copy)]
 pub enum OptionType {
@@ -50,10 +50,22 @@ impl<T: Real> OptionInstrument<T> for FutureOption {
     }
 
     fn time_to_expiry(&self) -> T {
-        let now = Utc::now();
-        let duration = self.expiry.signed_duration_since(now);
-        let seconds = duration.num_seconds() as f64;
-        let years = seconds / (365.25 * 24.0 * 3600.0);
-        Real::from_f64(years)
+        // 1. Get current date in UTC and convert to NaiveDate
+        let now = Utc::now().date_naive();
+        
+        // 2. Extract the NaiveDate from your expiry (assuming self.expiry is a DateTime or NaiveDate)
+        let expiry_date = self.expiry.date_naive();
+
+        // 3. Use the DefaultPeriodCalculator to get the year fraction
+        // Note: 'convention' would likely be a field on your struct
+        let calculator = DefaultPeriodCalculator;
+        let years = calculator.year_fraction(
+            now, 
+            expiry_date, 
+            DayCountConvention::Actual365Fixed,
+        );
+
+        // 4. Convert the wrapped f64 (Years) into your generic type T
+        Real::from_f64(years.0)
     }
 }

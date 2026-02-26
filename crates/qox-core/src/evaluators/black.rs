@@ -3,7 +3,7 @@ use std::ops::{Add, Div, Mul, Sub};
 use crate::market::market_data::OptionMarketData;
 use crate::market::vol_surface::VolSurface;
 use crate::real::dual2_vec::Dual2Vec64;
-use crate::traits::pricing_engine::{OptionPricingEngine, OptionPricingResult};
+use crate::traits::pricing_engine::{OptionEvaluable, OptionEvaluation};
 use crate::traits::instrument::OptionInstrument;
 use crate::traits::rate_curve::RateCurve;
 use crate::traits::real::Real;
@@ -63,7 +63,7 @@ impl BlackEngine {
     }
 }
 
-// impl<I, RC, VS> OptionPricingEngine<I, HyperDual, RC, VS> for BlackEngine
+// impl<I, RC, VS> OptionEvaluable<I, HyperDual, RC, VS> for BlackEngine
 // where
 //     I: OptionInstrument<HyperDual>,
 //     RC: RateCurve<HyperDual>,
@@ -100,7 +100,7 @@ impl BlackEngine {
 //         &self,
 //         instrument: &I,
 //         market: &OptionMarketData<HyperDual, RC, VS>,
-//     ) -> OptionPricingResult<f64>
+//     ) -> OptionEvaluation<f64>
 //     where
 //         RC: RateCurve<HyperDual>,
 //         VS: VolSurface<HyperDual>,
@@ -108,7 +108,7 @@ impl BlackEngine {
         
 //         let price_hyper = self.price(instrument, market);
 
-//         OptionPricingResult {
+//         OptionEvaluation {
 //             price: price_hyper.0.re(),
 //             delta: price_hyper.0.eps1,
 //             gamma: price_hyper.0.eps1eps2,
@@ -119,7 +119,7 @@ impl BlackEngine {
 //     }
 // }
 
-impl<I, RC, VS, const N: usize> OptionPricingEngine<I, DualVec64<N>, RC, VS> for BlackEngine
+impl<I, RC, VS, const N: usize> OptionEvaluable<I, DualVec64<N>, RC, VS> for BlackEngine
 where
     I: OptionInstrument<DualVec64<N>>,
     RC: RateCurve<DualVec64<N>>,
@@ -129,7 +129,7 @@ where
                              Mul<&'a DualVec64<N>, Output = DualVec64<N>> + 
                              Div<&'a DualVec64<N>, Output = DualVec64<N>>,
 {
-    fn price(
+    fn evaluate(
         &self,
         instrument: &I,
         market: &OptionMarketData<DualVec64<N>, RC, VS>,
@@ -137,20 +137,20 @@ where
         self.compute(instrument, market)
     }
 
-    fn price_and_greeks(
-        &self,
-        instrument: &I,
-        market: &OptionMarketData<DualVec64<N>, RC, VS>,
-    ) -> OptionPricingResult<f64>
-    where
-        RC: RateCurve<DualVec64<N>>,
-        VS: VolSurface<DualVec64<N>>,
-    {
+    fn evaluate_all(
+            &self,
+            instrument: &I,
+            market: &OptionMarketData<DualVec64<N>, RC, VS>,
+        ) -> OptionEvaluation<f64>
+        where
+            RC: RateCurve<DualVec64<N>>,
+            VS: VolSurface<DualVec64<N>> {
+        
         let res = self.compute(instrument, market);
        
         let eps = res.0.eps.unwrap_generic(nalgebra::Const::<N>, nalgebra::U1);
 
-        OptionPricingResult {
+        OptionEvaluation {
             price: res.0.re(),
             delta: eps[0],
             gamma: 0.0,          // DualVec64 doesn't provide 2nd derivatives by default
@@ -161,7 +161,7 @@ where
     }
 }
 
-impl<I, RC, VS, const N: usize> OptionPricingEngine<I, Dual2Vec64<N>, RC, VS> for BlackEngine
+impl<I, RC, VS, const N: usize> OptionEvaluable<I, Dual2Vec64<N>, RC, VS> for BlackEngine
 where
     I: OptionInstrument<Dual2Vec64<N>>,
     RC: RateCurve<Dual2Vec64<N>>,
@@ -171,23 +171,24 @@ where
                              Mul<&'a Dual2Vec64<N>, Output = Dual2Vec64<N>> + 
                              Div<&'a Dual2Vec64<N>, Output = Dual2Vec64<N>>,
 {
-    fn price(
-        &self,
-        instrument: &I,
-        market: &OptionMarketData<Dual2Vec64<N>, RC, VS>,
-    ) -> Dual2Vec64<N> {
+    fn evaluate(
+            &self,
+            instrument: &I,
+            market: &OptionMarketData<Dual2Vec64<N>, RC, VS>,
+        ) -> Dual2Vec64<N> {
         self.compute(instrument, market)
     }
 
-    fn price_and_greeks(
-        &self,
-        instrument: &I,
-        market: &OptionMarketData<Dual2Vec64<N>, RC, VS>,
-    ) -> OptionPricingResult<f64>
-    where
-        RC: RateCurve<Dual2Vec64<N>>,
-        VS: VolSurface<Dual2Vec64<N>>,
-    {
+    fn evaluate_all(
+            &self,
+            instrument: &I,
+            market: &OptionMarketData<Dual2Vec64<N>, RC, VS>,
+        ) -> OptionEvaluation<f64>
+        where
+            RC: RateCurve<Dual2Vec64<N>>,
+            VS: VolSurface<Dual2Vec64<N>> {
+        
+    
         let res = self.compute(instrument, market);
         
         // v1: Gradient vector [dS, dr, dSigma, ...]
@@ -196,7 +197,7 @@ where
         // v2: Hessian matrix [ (dS,dS), (dS,dr), (dS,dSigma) ... ]
         let v2 = res.0.v2.unwrap_generic(nalgebra::Const::<N>, nalgebra::Const::<N>);
 
-        OptionPricingResult {
+        OptionEvaluation {
             price: res.0.re(),
             // First-order Greeks
             delta: v1[0],
@@ -207,7 +208,7 @@ where
             // Second-order Greeks (The "Single Pass" advantage)
             gamma: v2[(0, 0)], 
             
-            // Optional: You could extend your OptionPricingResult struct to include these:
+            // Optional: You could extend your OptionEvaluation struct to include these:
             // vanna: if N > 2 { v2[(0, 2)] } else { 0.0 }, // d^2V / (dS dSigma)
             // volga: if N > 2 { v2[(2, 2)] } else { 0.0 }, // d^2V / (dSigma^2)
         }
