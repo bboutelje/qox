@@ -14,6 +14,11 @@ pub trait Real:
 {
     fn from_f64(v: f64) -> Self;
     fn to_f64(&self) -> f64;
+    fn from_real<R: Real>(v: R) -> Self {
+        Self::from_f64(v.to_f64())
+    }
+
+
     fn max(&self, other: &Self) -> Self;
 
     fn exp(&self) -> Self;

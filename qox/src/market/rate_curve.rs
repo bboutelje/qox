@@ -22,26 +22,29 @@ impl<'a, T: Real> FlatRateCurve<'a, T> {
     }
 }
 
-impl<'a, T: Real + PartialOrd> RateCurve<T> for FlatRateCurve<'a, T> 
+impl<'a, T> RateCurve for FlatRateCurve<'a, T> 
 where
+    T: Real + PartialOrd,
     for<'b> &'b T: Add<&'b T, Output = T> + 
                    Sub<&'b T, Output = T> + 
                    Mul<&'b T, Output = T> + 
                    Div<&'b T, Output = T> +
                    Neg<Output = T>,
 {
+    // 1. You must define the associated type required by the trait
+    type T = T;
+
     fn zero_rate(&self, _t: &T) -> T {
-        // Now 'rate' is being read here
+        // 2. Ensure self.rate has a .value field
         self.rate.value.clone()
     }
 
     fn discount_factor(&self, t: &T) -> T {
-        // And here
         self.rate.discount_factor(t)
     }
 }
 
-impl<'a, T: Real + PartialOrd> RateCurve<T> for InterpolatedRateCurve<'a, T> 
+impl<'a, T: Real + PartialOrd> RateCurve for InterpolatedRateCurve<'a, T> 
 where
     for<'b> &'b T: Add<&'b T, Output = T> + 
                    Sub<&'b T, Output = T> + 
@@ -49,12 +52,17 @@ where
                    Div<&'b T, Output = T> + 
                    Neg<Output = T>,
 {
+    // 1. Link the associated type to the generic T
+    type T = T;
+
     fn zero_rate(&self, t: &T) -> T {
         self.interpolator.interpolate(t)
     }
 
     fn discount_factor(&self, t: &T) -> T {
         let r = self.zero_rate(t);
+        
+        // 2. Wrap the interpolated rate in an InterestRate object
         let rate = InterestRate {
             value: r,
             convention: self.rates[0].convention,
@@ -62,8 +70,7 @@ where
             frequency: self.rates[0].frequency,
         };
         
-        // Now the compiler knows that for this T, 
-        // InterestRate correctly implements Discountable.
+        // 3. Return the calculated discount factor
         rate.discount_factor(t)
     }
 }
@@ -117,10 +124,10 @@ pub struct ContinuousRateCurve<'a, T: Real> {
 impl<'a, T: Real> ContinuousRateCurve<'a, T> {
     /// Creates a new curve from a raw T value.
     /// Internal InterestRate is set to Continuous compounding.
-    pub fn new<I: Into<T>>(value: I) -> Self {
+    pub fn new(value: T) -> Self {
         Self {
             rate: InterestRate {
-                value: value.into(), // Automatically converts here
+                value: value, // Automatically converts here
                 compounding: Compounding::Continuous,
                 frequency: Frequency::Infinite,
                 convention: DayCountConvention::Actual365Fixed, 
@@ -129,18 +136,26 @@ impl<'a, T: Real> ContinuousRateCurve<'a, T> {
     }
 }
 
-impl<'a, T: Real + PartialOrd> RateCurve<T> for ContinuousRateCurve<'a, T>
+impl<'a, T> RateCurve for ContinuousRateCurve<'a, T>
 where
-    for<'b> &'b T: Add<&'b T, Output = T> + Sub<&'b T, Output = T> + 
-                    Mul<&'b T, Output = T> + Div<&'b T, Output = T> +
-                    Neg<Output = T>,
+    T: Real + PartialOrd,
+    for<'b> &'b T: Add<&'b T, Output = T> + 
+                   Sub<&'b T, Output = T> + 
+                   Mul<&'b T, Output = T> + 
+                   Div<&'b T, Output = T> +
+                   Neg<Output = T>,
 {
+    // The associated type must match the generic used in the struct
+    type T = T;
+
     fn zero_rate(&self, _t: &T) -> T {
+        // Accessing the value from the inner rate object
         self.rate.value.clone()
     }
 
     fn discount_factor(&self, t: &T) -> T {
         // Since compounding is Continuous, this performs: exp(-r * t)
+        // Ensure that the 't' passed in matches the curve's expected type
         self.rate.discount_factor(t)
     }
 }

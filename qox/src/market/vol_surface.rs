@@ -1,10 +1,8 @@
+use std::ops::{Add, Div, Mul, Sub};
+
 use chrono::NaiveDate;
 
-use crate::{core::{error::CurveError, period::{DayCountConvention, PeriodCalculator}, tenor::Tenor}, math::interpolate::LinearInterpolator, traits::real::Real};
-
-pub trait VolSurface<T> {
-    fn volatility(&self, t: &T) -> T;
-}
+use crate::{core::{error::CurveError, period::{DayCountConvention, PeriodCalculator}, tenor::Tenor}, math::interpolate::LinearInterpolator, traits::{real::Real, vol_surface::VolSurface}};
 
 #[derive(Debug, Clone)]
 pub struct FlatVolSurface<T> {
@@ -12,17 +10,21 @@ pub struct FlatVolSurface<T> {
 }
 
 impl<T> FlatVolSurface<T> {
-    pub fn new<I: Into<T>>(vol: I) -> Self {
+    pub fn new(vol: T) -> Self {
         Self {
-            vol: vol.into()
+            vol: vol
         }
     }
 }
 
-impl<T> VolSurface<T> for FlatVolSurface<T>
-where T: Copy {
+impl<T: Real> VolSurface for FlatVolSurface<T>
+where for<'a> &'a T: Add<&'a T, Output = T> + 
+                   Sub<&'a T, Output = T> + 
+                   Mul<&'a T, Output = T> + 
+                   Div<&'a T, Output = T>, {
+    type T = T;
     fn volatility(&self, _t: &T) -> T {
-        self.vol
+        self.vol.clone()
     }
 }
 
