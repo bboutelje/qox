@@ -1,10 +1,10 @@
 use chrono::{Duration, Utc};
 use num_dual::{Dual2Vec};
+use qox::evaluators::analytic::black::BlackEngine;
 use qox::instruments::future_option::{FutureOption, OptionType};
 use qox::market::{market_data::OptionMarketData, rate_curve::ContinuousRateCurve, vol_surface::FlatVolSurface};
 use qox::real::dual2_vec::Dual2Vec64;
 use qox::traits::pricing_engine::OptionEvaluable;
-use qox::evaluators::black::BlackEngine;
 
 pub fn main() {
 
@@ -36,9 +36,9 @@ pub fn main() {
     let engine = BlackEngine;
 
     let option = FutureOption::new(
-        100.0,  // strike
-        Utc::now() + Duration::days(365),    // time_to_expiry
-        OptionType::Put,   // is_call
+        100.0,
+        Utc::now() + Duration::days(365),
+        OptionType::Call,
     );
     
     let result = engine.evaluate_all(&option, &market);

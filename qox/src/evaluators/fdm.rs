@@ -1,7 +1,7 @@
 use std::ops::{Add, Div, Mul, Sub};
-use crate::solvers::fdm::operators::{TridiagonalCoeffs, solve_tridiagonal};
+use crate::solvers::finite_difference::operators::{TridiagonalCoeffs, solve_tridiagonal};
 use crate::market::{market_data::OptionMarketData, vol_surface::VolSurface};
-use crate::solvers::fdm::grid::FdmGrid;
+use crate::solvers::finite_difference::grid::FdmGrid;
 use crate::traits::{instrument::OptionInstrument, pricing_engine::OptionEvaluable, rate_curve::RateCurve, real::Real};
 
 pub struct Evaluator {

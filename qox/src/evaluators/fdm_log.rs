@@ -1,6 +1,6 @@
 use std::ops::{Add, Div, Mul, Sub};
 
-use crate::{market::{market_data::OptionMarketData, vol_surface::VolSurface}, solvers::fdm::{meshing::{log::FdmLog1dMesher, uniform::Uniform1dMesher}, operators_log::{TridiagonalCoeffs, solve_tridiagonal}}, traits::{fdm_1d_mesher::Fdm1dMesher, instrument::OptionInstrument, pricing_engine::OptionEvaluable, rate_curve::RateCurve, real::Real}};
+use crate::{market::{market_data::OptionMarketData, vol_surface::VolSurface}, solvers::finite_difference::{meshing::{log::LogMesher1d, uniform::UniformMesher1d}, operators_log::{TridiagonalCoeffs, solve_tridiagonal}}, traits::{fdm_1d_mesher::Mesher1d, instrument::OptionInstrument, pricing_engine::OptionEvaluable, rate_curve::RateCurve, real::Real}};
 
 pub struct Evaluator {
     pub config: FdmConfig,
@@ -33,14 +33,12 @@ where
         let x_max = s_max.ln();
 
         // 2. Build the Uniform Mesher in Log Space
-        let uniform_mesher = Uniform1dMesher::new(x_min, x_max, self.config.nodes);
-        let mesher = FdmLog1dMesher::new(uniform_mesher);
+        let uniform_mesher = UniformMesher1d::new(x_min, x_max, self.config.nodes);
+        let mesher = LogMesher1d::new(uniform_mesher);
 
         let mut v = self.initialize_payoff(instrument, &mesher);
         
         let dt = T::from_f64(instrument.time_to_expiry().to_f64() / self.config.time_steps as f64);
-
-        println!("time to expiry {:.6}", instrument.time_to_expiry().to_f64());
 
         let r = market.rate_curve.zero_rate(&T::zero());
         let sigma = market.vol_surface.volatility(&T::zero());
@@ -70,7 +68,7 @@ impl Evaluator {
     where 
         T: Real, 
         I: OptionInstrument<T>,
-        M: Fdm1dMesher<T>,
+        M: Mesher1d<T>,
         for<'a> &'a T: Add<&'a T, Output = T> + Sub<&'a T, Output = T> + 
                        Mul<&'a T, Output = T> + Div<&'a T, Output = T>
     {
@@ -96,7 +94,7 @@ impl Evaluator {
         T: Real,
         RC: RateCurve<T>,
         VS: VolSurface<T>,
-        M: Fdm1dMesher<T>,
+        M: Mesher1d<T>,
         for<'a> &'a T: Add<&'a T, Output = T> + Sub<&'a T, Output = T> + 
                        Mul<&'a T, Output = T> + Div<&'a T, Output = T> +
                        std::ops::Neg<Output = T>,
@@ -139,7 +137,7 @@ impl Evaluator {
     fn first_derivative_coeffs<T, M>(&self, mesher: &M) -> (Vec<T>, Vec<T>, Vec<T>)
     where
         T: Real,
-        M: Fdm1dMesher<T>,
+        M: Mesher1d<T>,
         for<'a> &'a T: Add<&'a T, Output = T> + Sub<&'a T, Output = T> + 
                        Mul<&'a T, Output = T> + Div<&'a T, Output = T>,
     {
@@ -167,7 +165,7 @@ impl Evaluator {
     fn second_derivative_coeffs<T, M>(&self, mesher: &M) -> (Vec<T>, Vec<T>, Vec<T>)
     where
         T: Real,
-        M: Fdm1dMesher<T>,
+        M: Mesher1d<T>,
         for<'a> &'a T: Add<&'a T, Output = T> + Sub<&'a T, Output = T> + 
                        Mul<&'a T, Output = T> + Div<&'a T, Output = T>,
     {
@@ -196,7 +194,7 @@ impl Evaluator {
     fn interpolate<T, M>(&self, mesher: &M, v: &[T], spot: &T) -> T 
     where
         T: Real,
-        M: Fdm1dMesher<T>,
+        M: Mesher1d<T>,
         for<'a> &'a T: Add<&'a T, Output = T> + Sub<&'a T, Output = T> + 
                     Mul<&'a T, Output = T> + Div<&'a T, Output = T>
     {

@@ -1,14 +1,14 @@
 use std::ops::{Add, Div, Mul, Sub};
 
-use crate::traits::{fdm_1d_mesher::Fdm1dMesher, real::Real};
+use crate::traits::{fdm_1d_mesher::Mesher1d, real::Real};
 
-pub struct Uniform1dMesher<T: Real> {
+pub struct UniformMesher1d<T: Real> {
     centers: Vec<T>,
     h_plus: Vec<T>,
     h_minus: Vec<T>,
 }
 
-impl<T: Real> Uniform1dMesher<T>
+impl<T: Real> UniformMesher1d<T>
 where
     for<'a> &'a T: Add<&'a T, Output = T> + 
                    Sub<&'a T, Output = T> + 
@@ -46,7 +46,7 @@ where
     }
 }
 
-impl<T: Real> Fdm1dMesher<T> for Uniform1dMesher<T>
+impl<T: Real> Mesher1d<T> for UniformMesher1d<T>
 where 
         for<'a> &'a T: Add<&'a T, Output = T> + Sub<&'a T, Output = T> + 
                     Mul<&'a T, Output = T> + Div<&'a T, Output = T> {

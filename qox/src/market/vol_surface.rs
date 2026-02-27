@@ -2,10 +2,7 @@ use chrono::NaiveDate;
 
 use crate::{core::{error::CurveError, period::{DayCountConvention, PeriodCalculator}, tenor::Tenor}, math::interpolate::LinearInterpolator, traits::real::Real};
 
-
-/// Trait for volatility surfaces (generic over T for future AD support)
 pub trait VolSurface<T> {
-    /// Returns implied volatility for time to expiry t
     fn volatility(&self, t: &T) -> T;
 }
 

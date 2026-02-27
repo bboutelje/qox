@@ -12,8 +12,7 @@ pub enum GreekRequest {
     FirstOrder
 }
 
-pub mod black;
 pub mod fdm;
 pub mod fdm_log;
 pub mod finite_difference;
-
+pub mod analytic;

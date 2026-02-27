@@ -1,1 +1,1 @@
-pub mod fdm;
+pub mod finite_difference;

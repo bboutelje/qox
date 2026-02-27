@@ -28,7 +28,7 @@ impl BlackEngine {
         let f = &market.spot_price;
         let k = T::from_f64(instrument.strike().to_f64());
         let t = T::from_f64(instrument.time_to_expiry().to_f64());
-        
+
         let sigma = market.vol_surface.volatility(&t);
         let df = market.rate_curve.discount_factor(&t);
         let half = T::from_f64(0.5);

@@ -1,6 +1,6 @@
 use std::ops::{Add, Div, Mul, Sub};
 use crate::traits::real::Real;
-use crate::traits::fdm_1d_mesher::Fdm1dMesher;
+use crate::traits::fdm_1d_mesher::Mesher1d;
 
 pub struct TridiagonalCoeffs<T: Real> {
     pub a: Vec<T>, // Lower diagonal
@@ -19,7 +19,7 @@ where
     /// 
     /// The PDE being solved is:
     /// dV/dt + 0.5*sigma^2 * d2V/dx2 + (r - 0.5*sigma^2) * dV/dx - rV = 0
-    pub fn black_scholes_log_operator<M: Fdm1dMesher<T>>(
+    pub fn black_scholes_log_operator<M: Mesher1d<T>>(
         mesher: &M, 
         r: &T, 
         sigma: &T, 
