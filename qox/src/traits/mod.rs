@@ -1,4 +1,4 @@
-use crate::real::{dual_vec::DualVec64, dual2_vec::Dual2Vec64};
+use crate::{real::{dual_vec::DualVec64, dual2_vec::Dual2Vec64}, traits::{rate_curve::RateCurve, real::Real, vol_surface::VolSurface}};
 
 pub mod calendar;
 pub mod instrument;
@@ -8,12 +8,29 @@ pub mod rate_curve;
 pub mod boundary;
 pub mod fdm_1d_mesher;
 pub mod vol_surface;
+pub mod payoff;
 
 
 
 pub trait EvaluationResolver<RC, VS> {
     type Output;
 }
+
+pub type Resolved<SReal, RCReal, VSReal> = 
+    <SReal as EvaluationResolver<RCReal, VSReal>>::Output;
+// pub trait ResolvedReal<RC, VS>: EvaluationResolver<RC, VS> {
+//     // This helper makes the return type and internal calls easy
+//     type Type: Real;
+// }
+
+// Blanket implementation
+// impl<S, RC, VS> ResolvedReal<RC, VS> for S 
+// where 
+//     S: EvaluationResolver<RC, VS>,
+//     S::Output: Real
+// {
+//     type Type = S::Output;
+// }
 
 // macro_rules! impl_eval_resolver {
 //     ($D:ident) => {

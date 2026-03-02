@@ -1,1 +1,1 @@
-pub mod finite_difference;
+pub mod black_scholes;

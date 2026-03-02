@@ -5,6 +5,7 @@ pub mod market;
 pub mod traits;
 pub mod core;
 pub mod math;
+pub mod solvers_old;
 pub mod solvers;
 
 #[derive(Debug, Clone, Copy, PartialEq)]

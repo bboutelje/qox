@@ -14,5 +14,5 @@ pub enum GreekRequest {
 
 pub mod fdm;
 pub mod fdm_log;
-pub mod finite_difference;
+pub mod black_scholes;
 pub mod analytic;

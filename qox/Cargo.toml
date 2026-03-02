@@ -26,3 +26,8 @@ path = "examples/fdm_demo.rs"
 [[example]]
 name = "demo"
 path = "examples/demo.rs"
+
+
+[profile.release]
+lto = "thin"          # Link-Time Optimization (faster binaries)
+codegen-units = 1

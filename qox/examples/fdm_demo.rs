@@ -5,11 +5,13 @@ use nalgebra::Const;
 use num_dual::Dual2Vec;
 use num_dual::DualStruct;
 use num_dual::DualVec;
-use qox::evaluators::finite_difference::evaluator::Evaluator;
-use qox::evaluators::finite_difference::evaluator::FdmConfig;
+
+use qox::evaluators::black_scholes::finite_difference::evaluator::Evaluator;
 use qox::real::ad_gradient::Gradient;
 use qox::real::dual_vec::DualVec64;
+use qox::real::dual2_vec::Dual2Vec64;
 use qox::real::reverse_node::ReverseGradient;
+use qox::solvers::black_scholes::finite_difference::solver::FdmConfig;
 use qox::traits::real::Real;
 use qox::{instruments::future_option::{FutureOption, OptionType}, market::{market_data::OptionMarketData, rate_curve::ContinuousRateCurve, vol_surface::FlatVolSurface}};
 use qox::traits::pricing_engine::OptionEvaluable;
@@ -28,22 +30,22 @@ pub fn main() {
     //     DualVec::<f64, f64, Const<1>>::from_re(95.0)
     // );
 
-    // let rate = DualVec64::<1>(
-    //     DualVec::<f64, f64, Const<1>>::from_re(0.05)//.derivative(0)
-    // );
+    let rate = DualVec64::<1>(
+        DualVec::<f64, f64, Const<1>>::from_re(0.05)//.derivative(0)
+    );
 
     let vol = DualVec64::<1>(
         DualVec::<f64, f64, Const<1>>::from_re(0.20).derivative(0)
     );
 
     let spot = 95.0;
-    let rate = 0.05;
+    //let rate = 0.05;
     //let vol = 0.2;
     // let spot = Dual2Vec64::<3>(Dual2Vec::from_re(95.0));
     // let rate = Dual2Vec64::<3>(Dual2Vec::from_re(0.05));
-    // //let vol  = Dual2Vec64::<1>(Dual2Vec::from_re(0.20).derivative(0));
+    //let vol  = Dual2Vec64::<1>(Dual2Vec::from_re(0.20).derivative(0));
     
-    // let vol = Dual2Vec64::<3>(<Dual2Vec<_, _, Const<3>>>::from_re(0.20).derivative(0));
+    //let vol = Dual2Vec64::<1>(<Dual2Vec<_, _, Const<1>>>::from_re(0.20).derivative(0));
     
     let market = OptionMarketData::new(
         spot,
@@ -69,12 +71,12 @@ pub fn main() {
     let start = Instant::now();
     // This calls the FDM logic instead of the Black formula
     let mut result_price = evaluator.evaluate(&option, &market);
-    let n = 1;
+    let n = 10000;
 
-    // for _ in 0..n {
-    //     //ReverseGradient::reset_tape();
-    //     result_price = engine.price(&option, &market);
-    // }
+    for _ in 0..n {
+        //ReverseGradient::reset_tape();
+        result_price = evaluator.evaluate(&option, &market);
+    }
     let duration = start.elapsed();
 
     //println!("Price: {:.4}", result_price);

@@ -40,7 +40,8 @@ impl FutureOption {
 
 impl Instrument for FutureOption {}
 
-impl<T: Real> OptionInstrument<T> for FutureOption {
+impl OptionInstrument for FutureOption {
+    type T = f64;
     fn strike(&self) -> f64 {
         self.strike
     }
@@ -49,7 +50,7 @@ impl<T: Real> OptionInstrument<T> for FutureOption {
         matches!(self.option_type, OptionType::Call)
     }
 
-    fn time_to_expiry(&self) -> T {
+    fn time_to_expiry(&self) -> Self::T {
         // 1. Get current date in UTC and convert to NaiveDate
         let now = Utc::now().date_naive();
         
