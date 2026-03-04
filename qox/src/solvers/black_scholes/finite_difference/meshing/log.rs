@@ -29,7 +29,7 @@ impl<T: Real, M: Mesher1d<T>> Mesher1d<T> for LogMesher1d<T, M>
     fn h_plus(&self) -> &[T] { self.underlying.h_plus() }
     fn h_minus(&self) -> &[T] { self.underlying.h_minus() }
 
-    fn location(&self, index: usize) -> &T {
-        &self.exp_centers[index]
+    fn location(&self, index: usize) -> T {
+        self.exp_centers[index]
     }
 }

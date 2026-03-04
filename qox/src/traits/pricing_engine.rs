@@ -40,9 +40,9 @@ where
 {
     type Result: Real;
     fn evaluate(
-        &self,
-        instrument: &I,
+        self,
+        instrument: I,
         // Update the market data reference to use the associated type for the rate
-        market: &OptionMarketData<SReal, RC, VS>,
+        market: OptionMarketData<SReal, RC, VS>,
     ) -> Self::Result;
 }

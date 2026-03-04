@@ -7,7 +7,7 @@ pub enum OptionType {
     Put,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct FutureOption {
     pub strike: f64,
     pub expiry: DateTime<Utc>,
@@ -42,15 +42,15 @@ impl Instrument for FutureOption {}
 
 impl OptionInstrument for FutureOption {
     type T = f64;
-    fn strike(&self) -> f64 {
+    fn strike(self) -> f64 {
         self.strike
     }
 
-    fn is_call(&self) -> bool {
+    fn is_call(self) -> bool {
         matches!(self.option_type, OptionType::Call)
     }
 
-    fn time_to_expiry(&self) -> Self::T {
+    fn time_to_expiry(self) -> Self::T {
         // 1. Get current date in UTC and convert to NaiveDate
         let now = Utc::now().date_naive();
         

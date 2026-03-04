@@ -1,4 +1,4 @@
-use crate::{real::{dual_vec::DualVec64, dual2_vec::Dual2Vec64}, traits::{rate_curve::RateCurve, real::Real, vol_surface::VolSurface}};
+use crate::real::{dual::Dual, dual_array::DualArray, num_dual_vec::NumDualVec};
 
 pub mod calendar;
 pub mod instrument;
@@ -10,46 +10,27 @@ pub mod fdm_1d_mesher;
 pub mod vol_surface;
 pub mod payoff;
 
-
-
 pub trait EvaluationResolver<RC, VS> {
     type Output;
 }
 
 pub type Resolved<SReal, RCReal, VSReal> = 
     <SReal as EvaluationResolver<RCReal, VSReal>>::Output;
-// pub trait ResolvedReal<RC, VS>: EvaluationResolver<RC, VS> {
-//     // This helper makes the return type and internal calls easy
-//     type Type: Real;
-// }
 
-// Blanket implementation
-// impl<S, RC, VS> ResolvedReal<RC, VS> for S 
-// where 
-//     S: EvaluationResolver<RC, VS>,
-//     S::Output: Real
-// {
-//     type Type = S::Output;
-// }
+macro_rules! impl_eval_resolver_simple {
+    ($D:ident) => {
+        // --- 1. S is already the AD type ---
+        impl EvaluationResolver<f64, f64> for $D { type Output = $D; }
+        impl EvaluationResolver<$D, f64> for $D { type Output = $D; }
+        impl EvaluationResolver<f64, $D> for $D { type Output = $D; }
+        impl EvaluationResolver<$D, $D> for $D { type Output = $D; }
 
-// macro_rules! impl_eval_resolver {
-//     ($D:ident) => {
-//         // This handles the pure f64 case for the type
-//         impl EvaluationResolver<f64, f64> for $D { type Output = $D; }
-//         // Note: This version doesn't handle the <const N>
-//     };
-
-//     // Use this version for your Dual types with a const generic
-//     (const $N:ident, $D:ident) => {
-//         impl<const $N: usize> EvaluationResolver<f64, f64> for $D<$N> { type Output = $D<$N>; }
-//         impl<const $N: usize> EvaluationResolver<$D<$N>, f64> for f64 { type Output = $D<$N>; }
-//         impl<const $N: usize> EvaluationResolver<f64, $D<$N>> for f64 { type Output = $D<$N>; }
-//         impl<const $N: usize> EvaluationResolver<$D<$N>, $D<$N>> for f64 { type Output = $D<$N>; }
-//         impl<const $N: usize> EvaluationResolver<$D<$N>, f64> for $D<$N> { type Output = $D<$N>; }
-//         impl<const $N: usize> EvaluationResolver<f64, $D<$N>> for $D<$N> { type Output = $D<$N>; }
-//         impl<const $N: usize> EvaluationResolver<$D<$N>, $D<$N>> for $D<$N> { type Output = $D<$N>; }
-//     };
-// }
+        // --- 2. S is f64 but promoted ---
+        impl EvaluationResolver<$D, f64> for f64 { type Output = $D; }
+        impl EvaluationResolver<f64, $D> for f64 { type Output = $D; }
+        impl EvaluationResolver<$D, $D> for f64 { type Output = $D; }
+    };
+}
 
 macro_rules! impl_eval_resolver {
     (const $N:ident, $D:ident) => {
@@ -73,14 +54,14 @@ macro_rules! impl_eval_resolver {
     };
 }
 
-
-
 // 1. Pure Path
 impl EvaluationResolver<f64, f64> for f64 { type Output = f64; }
 
 // 2. Dual Paths - Pass the "N" as a name for the macro to use in the impl header
-impl_eval_resolver!(const N, DualVec64);
-impl_eval_resolver!(const N, Dual2Vec64);
+impl_eval_resolver_simple!(Dual);
+impl_eval_resolver!(const N, DualArray);
+impl_eval_resolver!(const N, NumDualVec);
+
 
 
 pub trait EvaluationResult<RC, VS>: EvaluationResolver<RC, VS> {

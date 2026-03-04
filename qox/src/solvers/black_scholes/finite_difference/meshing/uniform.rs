@@ -9,21 +9,17 @@ pub struct UniformMesher1d<T: Real> {
 }
 
 impl<T> UniformMesher1d<T>
-where T: Real,
-for<'a> &'a T: Add<&'a T, Output = T> + 
-                   Sub<&'a T, Output = T> + 
-                   Mul<&'a T, Output = T> + 
-                   Div<&'a T, Output = T>,
+where T: Real
 {
     pub fn new(start: T, end: T, size: usize) -> Self {
 
         let mut centers = Vec::with_capacity(size);
         let n_minus_1 = T::from_f64((size - 1) as f64);
-        let dx = &(&end - &start) / &n_minus_1;
+        let dx = (end - start) / n_minus_1;
 
         for i in 0..size {
             let i_t = T::from_f64(i as f64);
-            let s_i = &start + &(&i_t * &dx);
+            let s_i = start + (i_t * dx);
             centers.push(s_i);
         }
 
@@ -36,7 +32,7 @@ for<'a> &'a T: Add<&'a T, Output = T> +
         let mut hp = vec![T::zero(); n];
         let mut hm = vec![T::zero(); n];
         for (i, window) in centers.windows(2).enumerate() {
-            let (left, right) = (&window[0], &window[1]);
+            let (left, right) = (window[0], window[1]);
             let diff = right - left;
             
             hp[i] = diff.clone();

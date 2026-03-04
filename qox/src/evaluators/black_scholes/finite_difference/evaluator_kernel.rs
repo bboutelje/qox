@@ -131,9 +131,9 @@
 //         (0..mesher.size()).map(|i| {
 //             let s = mesher.location(i);
 //             if instrument.is_call() {
-//                 (s - &strike).max(&T::zero())
+//                 (s - &strike).max(T::zero())
 //             } else {
-//                 (&strike - s).max(&T::zero())
+//                 (&strike - s).max(T::zero())
 //             }
 //         }).collect()
 //     }

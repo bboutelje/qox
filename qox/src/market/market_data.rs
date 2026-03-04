@@ -2,7 +2,7 @@ use crate::traits::rate_curve::RateCurve;
 use crate::traits::real::{Real};
 use crate::traits::vol_surface::VolSurface;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct OptionMarketData<SReal, RC, VS>
 where
     SReal: Real,

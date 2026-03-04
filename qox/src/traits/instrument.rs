@@ -5,11 +5,13 @@ pub trait Instrument {
 
 }
 
-pub trait OptionInstrument: Instrument {
+
+
+pub trait OptionInstrument: Instrument + Copy {
     type T: Real;
-    fn strike(&self) -> f64;
-    fn is_call(&self) -> bool;
-    fn time_to_expiry(&self) -> Self::T;
+    fn strike(self) -> f64;
+    fn is_call(self) -> bool;
+    fn time_to_expiry(self) -> Self::T;
 }
 
 

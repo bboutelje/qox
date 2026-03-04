@@ -4,7 +4,7 @@ use chrono::NaiveDate;
 
 use crate::{core::{error::CurveError, period::{DayCountConvention, PeriodCalculator}, tenor::Tenor}, math::interpolate::LinearInterpolator, traits::{real::Real, vol_surface::VolSurface}};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct FlatVolSurface<T> {
     vol: T,
 }
@@ -18,10 +18,7 @@ impl<T> FlatVolSurface<T> {
 }
 
 impl<T: Real> VolSurface for FlatVolSurface<T>
-where for<'a> &'a T: Add<&'a T, Output = T> + 
-                   Sub<&'a T, Output = T> + 
-                   Mul<&'a T, Output = T> + 
-                   Div<&'a T, Output = T>, {
+{
     type T = T;
     fn volatility(&self, _t: &T) -> T {
         self.vol.clone()

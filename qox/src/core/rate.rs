@@ -25,7 +25,7 @@ pub trait Discountable<T: Real> {
 }
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct InterestRate<'a, T> {
     pub value: T,
     pub convention: DayCountConvention<'a>,
@@ -46,7 +46,7 @@ where
         match self.compounding {
             Compounding::Simple => {
                 // df = 1 / (1 + r * t)
-                &one / &(&one + &k_mul(r, t))
+                one / (one + r * t)
             }
 
             Compounding::Continuous => {
@@ -60,17 +60,17 @@ where
                 // df = 1 / (1 + r/f)^(f*t)
                 let base = &one + &(r / &f);
                 let exponent = &f * t;
-                &one / &base.powf(&exponent)
+                &one / &base.powf(exponent)
             }
 
             Compounding::SimpleThenCompounded => {
                 if t <= &one {
-                    &one / &(&one + &k_mul(r, t))
+                    &one / &(one + r * t)
                 } else {
                     let f = T::from_f64(self.frequency as i32 as f64);
                     let base = &one + &(r / &f);
                     let exponent = &f * t;
-                    &one / &base.powf(&exponent)
+                    &one / &base.powf(exponent)
                 }
             }
         }
@@ -78,10 +78,7 @@ where
 }
 
 // Small helper to avoid syntax clutter for (r * t)
-fn k_mul<T>(a: &T, b: &T) -> T 
-where for<'a> &'a T: Mul<&'a T, Output = T> {
-    a * b
-}
+
 
 impl<'a> InterestRate<'a, f64> {
     pub fn implied_rate(

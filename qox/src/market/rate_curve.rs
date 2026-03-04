@@ -116,7 +116,7 @@ impl<'a, T: Real + PartialOrd> InterpolatedRateCurve<'a, T> {
 
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct ContinuousRateCurve<'a, T: Real> {
     rate: InterestRate<'a, T>,
 }
