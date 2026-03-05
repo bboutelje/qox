@@ -147,7 +147,7 @@
 //         Self::from(v)
 //     }
 
-//     fn to_f64(&self) -> f64 {
+//     fn scalar(&self) -> f64 {
 //         self.val
 //     }
 

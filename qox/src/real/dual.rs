@@ -10,6 +10,12 @@ pub struct Dual {
 }
 
 impl Dual {
+
+    #[inline]
+    fn val(&self) -> f64 {
+        self.val
+    }
+
     #[inline]
     pub fn new(val: f64, grad: f64) -> Self {
         Self { val, grad }
@@ -28,18 +34,33 @@ impl Dual {
 }
 
 impl Real for Dual {
+
     #[inline]
     fn from_f64(v: f64) -> Self {
         Dual::constant(v)
     }
     #[inline]
-    fn to_f64(self) -> f64 {
+    fn scalar(self) -> f64 {
         self.val
     }
 
     #[inline]
     fn max(self, other: Self) -> Self {
         if self.val >= other.val { self } else { other }
+    }
+
+    #[inline]
+    fn min(self, other: Self) -> Self {
+        if self.val <= other.val { self } else { other }
+    }
+
+    #[inline]
+    fn abs(self) -> Self {
+        if self.val >= 0.0 {
+            Dual::new(self.val, self.grad)
+        } else {
+            Dual::new(-self.val, -self.grad)
+        }
     }
 
     #[inline]

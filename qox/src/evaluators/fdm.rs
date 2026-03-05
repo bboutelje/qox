@@ -34,7 +34,7 @@
 
 //         let grid = FdmGrid::new_linear_space(s_min, s_max, self.config.nodes);
 //         let mut v = self.initialize_payoff(instrument, &grid);
-//         let dt = T::from_f64(instrument.time_to_expiry().to_f64() / self.config.time_steps as f64);
+//         let dt = T::from_f64(instrument.time_to_expiry().scalar() / self.config.time_steps as f64);
 
 //         // 1. Build the operator ONCE
 //         let r = market.rate_curve.zero_rate(&T::zero());
@@ -58,7 +58,7 @@
         
 //     //     let mut v = self.initialize_payoff(instrument, &grid);
 
-//     //     let dt = T::from_f64(instrument.time_to_expiry().to_f64() / self.config.time_steps as f64);
+//     //     let dt = T::from_f64(instrument.time_to_expiry().scalar() / self.config.time_steps as f64);
 //     //     for _ in 0..self.config.time_steps {
 //     //         // Pass the grid into the stepping logic
 //     //         v = self.step_backwards(&v, market, &grid, &dt);
@@ -181,7 +181,7 @@
 //         // 1. Find the surrounding nodes S_i and S_{i+1}
 //         // Since centers are sorted, binary search is O(log n)
 //         let idx = match grid.centers.binary_search_by(|val| {
-//             val.to_f64().partial_cmp(&spot.to_f64()).expect("NaN in Grid")
+//             val.scalar().partial_cmp(&spot.scalar()).expect("NaN in Grid")
 //         }) {
 //             Ok(exact_match) => return v[exact_match].clone(),
 //             Err(insertion_point) => {

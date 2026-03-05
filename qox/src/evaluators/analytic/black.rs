@@ -26,8 +26,8 @@
 //                     Mul<&'a T, Output = T> + Div<&'a T, Output = T>,
 //     {
 //         let f = &market.spot_price;
-//         let k = T::from_f64(instrument.strike().to_f64());
-//         let t = T::from_f64(instrument.time_to_expiry().to_f64());
+//         let k = T::from_f64(instrument.strike().scalar());
+//         let t = T::from_f64(instrument.time_to_expiry().scalar());
 
 //         let sigma = market.vol_surface.volatility(&t);
 //         let df = market.rate_curve.discount_factor(&t);
@@ -76,8 +76,8 @@
 // //         market: &OptionMarketData<HyperDual, RC, VS>,
 // //     ) -> HyperDual {
 // //         let f = market.spot_price.clone();
-// //         let k = HyperDual::from_f64(instrument.strike().to_f64());
-// //         let t = HyperDual::from_f64(instrument.time_to_expiry().to_f64());
+// //         let k = HyperDual::from_f64(instrument.strike().scalar());
+// //         let t = HyperDual::from_f64(instrument.time_to_expiry().scalar());
 // //         let sigma = HyperDual(market.vol_surface.volatility(t).0);
 // //         let df = HyperDual(market.rate_curve.discount_factor(t).0);
 // //         let is_call = instrument.is_call();

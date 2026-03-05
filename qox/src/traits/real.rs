@@ -1,8 +1,10 @@
 use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::fmt::Debug;
 
 pub trait Real: 
     Sized + 
     Copy + 
+    Debug +
     Add<Self, Output = Self> + 
     Sub<Self, Output = Self> + 
     Mul<Self, Output = Self> + 
@@ -13,9 +15,13 @@ pub trait Real:
     From<f64>
 {
     fn from_f64(v: f64) -> Self;
-    fn to_f64(self) -> f64; // No longer &self
+    fn scalar(self) -> f64; // No longer &self
 
-    fn max(self, other: Self) -> Self; // No longer &self or &Self
+    fn max(self, other: Self) -> Self;
+    fn min(self, other: Self) -> Self;
+
+    fn abs(self) -> Self;
+
 
     fn exp(self) -> Self;
     fn ln(self) -> Self;

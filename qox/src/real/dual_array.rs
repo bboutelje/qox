@@ -10,7 +10,7 @@ pub struct DualArray<const N: usize> {
 
 impl<const N: usize> DualArray<N> {
     #[inline]
-    pub fn constant(val: f64) -> Self {
+    fn constant(val: f64) -> Self {
         Self { val, grad: [0.0; N] }
     }
 
@@ -85,12 +85,27 @@ impl<const N: usize> From<f64> for DualArray<N> {
 // --- Implementation of the Real Trait ---
 
 impl<const N: usize> Real for DualArray<N> {
+    
     #[inline]
     fn from_f64(v: f64) -> Self { Self::constant(v) }
     #[inline]
-    fn to_f64(self) -> f64 { self.val }
+    fn scalar(self) -> f64 { self.val }
     #[inline]
     fn max(self, other: Self) -> Self { if self.val >= other.val { self } else { other } }
+    #[inline]
+    fn min(self, other: Self) -> Self { if self.val <= other.val { self } else { other } }
+
+    #[inline]
+    fn abs(self) -> Self {
+        if self.val >= 0.0 {
+            self
+        } else {
+            Self {
+                val: -self.val,
+                grad: self.grad.map(|da| -da),
+            }
+        }
+    }
 
     #[inline]
     fn exp(self) -> Self {

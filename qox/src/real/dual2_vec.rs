@@ -11,7 +11,7 @@
 //         Dual2Vec64(Dual2Vec::from_re(v))
 //     }
 
-//     fn to_f64(&self) -> f64 {
+//     fn scalar(&self) -> f64 {
 //         self.0.re()
 //     }
 

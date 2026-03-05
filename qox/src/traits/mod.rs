@@ -9,6 +9,8 @@ pub mod boundary;
 pub mod fdm_1d_mesher;
 pub mod vol_surface;
 pub mod payoff;
+pub mod time_stepper;
+pub mod linear_operator;
 
 pub trait EvaluationResolver<RC, VS> {
     type Output;

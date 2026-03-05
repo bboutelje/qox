@@ -40,7 +40,7 @@
 
 //         let mut v = self.initialize_payoff(instrument, &mesher);
         
-//         let dt = T::from_f64(instrument.time_to_expiry().to_f64() / self.config.time_steps as f64);
+//         let dt = T::from_f64(instrument.time_to_expiry().scalar() / self.config.time_steps as f64);
 
 //         let r = market.rate_curve.zero_rate(&T::zero());
 //         let sigma = market.vol_surface.volatility(&T::zero());
@@ -204,7 +204,7 @@
 //         let target = spot.ln();
 
 //         let idx = match mesher.centers().binary_search_by(|val| {
-//             val.to_f64().partial_cmp(&target.to_f64()).expect("NaN in Grid")
+//             val.scalar().partial_cmp(&target.scalar()).expect("NaN in Grid")
 //         }) {
 //             Ok(exact_match) => return v[exact_match].clone(),
 //             Err(insertion_point) => {

@@ -2,6 +2,7 @@ use std::{cmp::Ordering, ops::{Add, Div, Mul, Neg, Sub}};
 use crate::traits::real::Real;
 use num_dual::{Derivative, DualNum, DualStruct, DualVec};
 use nalgebra::Const;
+use nalgebra::ComplexField;
 
 #[derive(Debug, Clone, Copy)]
 pub struct NumDualVec<const N: usize>(pub DualVec<f64, f64, Const<N>>);
@@ -29,11 +30,12 @@ impl<const N: usize> NumDualVec<N> {
 }
 
 impl<const N: usize> Real for NumDualVec<N> {
+    
     fn from_f64(v: f64) -> Self {
         NumDualVec(DualVec::from_re(v))
     }
 
-    fn to_f64(self) -> f64 {
+    fn scalar(self) -> f64 {
         self.0.re()
     }
 
@@ -43,6 +45,19 @@ impl<const N: usize> Real for NumDualVec<N> {
         } else {
             other
         }
+    }
+
+    fn min(self, other: Self) -> Self {
+        if self.0.re() <= other.0.re() {
+            self
+        } else {
+            other
+        }
+    }
+
+    #[inline]
+    fn abs(self) -> Self {
+        NumDualVec(self.0.abs())
     }
 
     fn exp(self) -> Self {

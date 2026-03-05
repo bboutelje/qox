@@ -1,0 +1,18 @@
+use crate::traits::real::Real;
+
+pub trait LinearOperator<T: Real> {
+    /// Returns the number of grid nodes (N)
+    fn size(&self) -> usize;
+
+    /// Computes out = L(t) * v
+    /// Equivalent to the 'function evaluation' f(t, y) in ODE solvers.
+    fn apply_into(&self, v: &[T], t: T, out: &mut [T]);
+
+    /// Solves (I - coeff * L(t)) * x = b
+    /// Writes the result into 'dest'.
+    /// This is where the Thomas Algorithm (TDMA) lives.
+    fn solve_inverse_into(&self, b: &[T], coeff: T, _t: T, dest: &mut [T], z_buffer: &mut [T]);
+
+
+    fn setup_coeff(&self, coeff: T);
+}

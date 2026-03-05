@@ -3,12 +3,21 @@ use crate::traits::real::Real;
 // --- f64 Implementation ---
 
 impl Real for f64 {
+    
+
     fn from_f64(val: f64) -> Self { val }
-    fn to_f64(self) -> f64 { self }
+    
+    fn scalar(self) -> f64 { self }
 
     fn max(self, other: Self) -> Self {
         f64::max(self, other)
     }
+
+    fn min(self, other: Self) -> Self {
+        f64::min(self, other)
+    }
+
+    fn abs(self) -> Self { self.abs() }
 
     fn exp(self) -> Self { f64::exp(self) }
     fn ln(self) -> Self { f64::ln(self) }

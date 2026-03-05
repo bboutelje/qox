@@ -1,11 +1,9 @@
-use std::ops::{Add, Div, Mul, Sub};
-
 use crate::traits::{fdm_1d_mesher::Mesher1d, real::{Real}};
 
 pub struct UniformMesher1d<T: Real> {
-    centers: Vec<T>,
-    h_plus: Vec<T>,
-    h_minus: Vec<T>,
+    pub centers: Vec<T>,
+    pub h_plus: Vec<T>,
+    pub h_minus: Vec<T>,
 }
 
 impl<T> UniformMesher1d<T>
@@ -48,6 +46,4 @@ impl<T: Real> Mesher1d<T> for UniformMesher1d<T>
     fn centers(&self) -> &[T] { &self.centers }
     fn h_plus(&self) -> &[T] { &self.h_plus }
     fn h_minus(&self) -> &[T] { &self.h_minus }
-    
-    
 }
