@@ -1,1 +1,17 @@
-/target
+# Your build output (Crucial)
+/target/
+.venv/
+
+# Python compiled files (Every time you run your code, these appear)
+__pycache__/
+*.py[cod]
+
+# Build artifacts (Created when you run 'maturin develop' or 'pip install')
+*.so
+*.pyd
+*.egg-info/
+build/
+dist/
+
+
+.pypirc

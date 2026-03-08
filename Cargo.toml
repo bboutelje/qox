@@ -12,15 +12,15 @@ categories = ["science", "mathematics", "finance", "algorithms"]
 
 [workspace]
 members = [
-    "qox",
+    "qox", "qox-python",
 ]
 resolver = "3"
 
 [workspace.dependencies]
+ad_trait = "0.2"
 chrono = { version = "0.4", default-features = false, features = ["std", "clock"] }
-qox-core = { path = "crates/qox-core" }
-qox-autodiff = { path = "crates/qox-autodiff" }
 libm = "0.2"
 num-dual = "0.13"
-ad_trait = "0.2"
+qox = { path = "qox" }
 serde = "1.0.228"
+

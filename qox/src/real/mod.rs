@@ -5,3 +5,4 @@ pub mod dual2_vec;
 pub mod dual;
 pub mod dual_array;
 pub mod reverse_node;
+pub mod complex;

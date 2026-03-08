@@ -2,9 +2,11 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 use std::time::Instant;
 
 use crate::solvers::black_scholes::finite_difference::solver::{FdmConfig, Solver};
-use crate::solvers::time_stepping::crank_nicholson::{self, DimsimCN};
+use crate::solvers::time_stepping::crank_nicolson::{CrankNicolson};
+use crate::solvers::time_stepping::dimsim2::{self, Dimsim2};
+//use crate::solvers::time_stepping::dimsim2::{self, Dimsim2};
 use crate::solvers::time_stepping::implicit_euler::ImplicitEuler;
-use crate::solvers::time_stepping::sdirk22::{self, Sdirk22};
+use crate::solvers::time_stepping::sdirk22::{Sdirk22};
 use crate::{market::market_data::OptionMarketData};
 use crate::traits::{EvaluationResolver, instrument::OptionInstrument, pricing_engine::OptionEvaluable, rate_curve::RateCurve, real::Real, vol_surface::VolSurface};
 
@@ -39,7 +41,7 @@ where
         let rate = market.rate_curve.zero_rate(&RC::T::zero());
         let vol = market.vol_surface.volatility(&VS::T::zero());
 
-        let stepper = DimsimCN::new();
+        let stepper = Dimsim2::new();
         solver.solve(
             stepper,
             instrument, 

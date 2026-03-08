@@ -33,6 +33,22 @@ pub struct InterestRate<'a, T> {
     pub frequency: Frequency,
 }
 
+impl<'a, T> InterestRate<'a, T> {
+    pub fn new(
+        value: T,
+        convention: DayCountConvention<'a>,
+        compounding: Compounding,
+        frequency: Frequency,
+    ) -> Self {
+        Self {
+            value,
+            convention,
+            compounding,
+            frequency,
+        }
+    }
+}
+
 impl<'a, T: Real + PartialOrd> Discountable<T> for InterestRate<'a, T> 
 where
     for<'b> &'b T: Add<&'b T, Output = T> + Sub<&'b T, Output = T> + 

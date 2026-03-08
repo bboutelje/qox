@@ -29,3 +29,4 @@ impl Real for f64 {
         0.5 * (1.0 + libm::erf(self / std::f64::consts::SQRT_2))
     }
 }
+

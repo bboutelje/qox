@@ -66,18 +66,7 @@ impl Solver {
         }
 
         let n = self.config.nodes;
-        for step in 0..self.config.time_steps {
-
-            // let v = state.step_slice(0);
-
-            // println!(
-            //     "step {} | min {:?} max {:?} mid {:?}",
-            //     step,
-            //     v.iter().cloned().fold(v[0], |a, b| a.min(b)),
-            //     v.iter().cloned().fold(v[0], |a, b| a.max(b)),
-            //     v[v.len() / 2]
-            // );
-
+        for _ in 0..self.config.time_steps {
 
             let next_t = state.current_time + dt;
 

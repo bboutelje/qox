@@ -1,0 +1,16 @@
+[package]
+name = "qox-python"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[lib]
+# The name MUST match the name of the python module you want to import
+# (e.g., 'import qox')
+name = "qox" 
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.27", features = ["extension-module"] }
+qox = { workspace = true }

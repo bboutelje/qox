@@ -2,7 +2,7 @@ use chrono::{Datelike, NaiveDate, Weekday};
 use crate::core::conventions::BusinessDayConvention;
 use crate::core::tenor::Tenor;
 
-pub trait Calendar: std::fmt::Debug {
+pub trait Calendar: std::fmt::Debug + Send + Sync {
     fn name(&self) -> &str;
     fn is_holiday(&self, _date: NaiveDate) -> bool { false }
     
