@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use crate::{core::period::{DayCountConvention, DefaultPeriodCalculator, PeriodCalculator}, evaluators::black_scholes::finite_difference::VanillaPayoff, solvers::{black_scholes::finite_difference::solver::{FdmConfig, Solver}, time_stepping::dimsim2::Dimsim2}, traits::{instrument::{Instrument, OptionInstrument, OptionType}, market_view::{MarketView, OptionMarketView}, payoff::{Payoff, PayoffAsInitialCondition}, real::Real}};
+use crate::{core::period::{DayCountConvention, DefaultPeriodCalculator, PeriodCalculator}, evaluators::black_scholes::finite_difference::VanillaPayoff, solvers::{black_scholes::finite_difference::solver::{FdmConfig, Solver}, time_stepping::dimsim2::Dimsim2}, traits::{instrument::{Instrument, OptionInstrument, OptionType}, market_view::OptionMarketView, payoff::{Payoff, PayoffAsInitialCondition}, real::Real}};
 use crate::traits::rate_curve::RateCurve;
 use crate::traits::vol_surface::VolSurface;
 
@@ -61,8 +61,8 @@ impl<T: Real> OptionInstrument<T, VanillaPayoff> for StockOption {
             },
         };
 
-        let rate = market_view.rate_curve().zero_rate(self.years_to_expiry());
-        let vol = market_view.vol_surface().volatility(0.0, T::zero());
+        let rate = market_frame.rate_curve().zero_rate(self.years_to_expiry());
+        let vol = market_frame.vol_surface().volatility(0.0, T::zero());
 
         let initial_condition = PayoffAsInitialCondition::new(<StockOption as OptionInstrument<T, VanillaPayoff>>::get_payoff(self));
 
@@ -71,7 +71,7 @@ impl<T: Real> OptionInstrument<T, VanillaPayoff> for StockOption {
             stepper,
             initial_condition,
             self.years_to_expiry(),
-            market_view.spot_price(),
+            market_frame.spot_price(),
             rate,
             vol,
         )
