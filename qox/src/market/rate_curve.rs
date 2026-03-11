@@ -22,44 +22,24 @@ impl<'a, T: Real> FlatRateCurve<'a, T> {
     }
 }
 
-impl<'a, T> RateCurve for FlatRateCurve<'a, T> 
-where
-    T: Real + PartialOrd,
-    for<'b> &'b T: Add<&'b T, Output = T> + 
-                   Sub<&'b T, Output = T> + 
-                   Mul<&'b T, Output = T> + 
-                   Div<&'b T, Output = T> +
-                   Neg<Output = T>,
+impl<'a, T: Real> RateCurve<T> for FlatRateCurve<'a, T>
 {
-    // 1. You must define the associated type required by the trait
-    type T = T;
-
-    fn zero_rate(&self, _t: &T) -> T {
-        // 2. Ensure self.rate has a .value field
-        self.rate.value.clone()
+    fn zero_rate(&self, _t: T) -> T {
+        self.rate.value
     }
 
-    fn discount_factor(&self, t: &T) -> T {
+    fn discount_factor(&self, t: T) -> T {
         self.rate.discount_factor(t)
     }
 }
 
-impl<'a, T: Real + PartialOrd> RateCurve for InterpolatedRateCurve<'a, T> 
-where
-    for<'b> &'b T: Add<&'b T, Output = T> + 
-                   Sub<&'b T, Output = T> + 
-                   Mul<&'b T, Output = T> + 
-                   Div<&'b T, Output = T> + 
-                   Neg<Output = T>,
+impl<'a, T: Real> RateCurve<T> for InterpolatedRateCurve<'a, T> 
 {
-    // 1. Link the associated type to the generic T
-    type T = T;
-
-    fn zero_rate(&self, t: &T) -> T {
+    fn zero_rate(&self, t: T) -> T {
         self.interpolator.interpolate(t)
     }
 
-    fn discount_factor(&self, t: &T) -> T {
+    fn discount_factor(&self, t: T) -> T {
         let r = self.zero_rate(t);
         
         // 2. Wrap the interpolated rate in an InterestRate object
@@ -75,7 +55,8 @@ where
     }
 }
 
-pub struct InterpolatedRateCurve<'a, T: Real + PartialOrd> {
+#[derive(Debug, Clone)]
+pub struct InterpolatedRateCurve<'a, T: Real> {
     #[allow(dead_code)]
     reference_date: NaiveDate,
     #[allow(dead_code)]
@@ -84,7 +65,7 @@ pub struct InterpolatedRateCurve<'a, T: Real + PartialOrd> {
     interpolator: LinearInterpolator<T>,
 }
 
-impl<'a, T: Real + PartialOrd> InterpolatedRateCurve<'a, T> {
+impl<'a, T: Real> InterpolatedRateCurve<'a, T> {
     pub fn new(
         reference_date: NaiveDate,
         tenors: Vec<Tenor>,
@@ -136,26 +117,13 @@ impl<'a, T: Real> ContinuousRateCurve<'a, T> {
     }
 }
 
-impl<'a, T> RateCurve for ContinuousRateCurve<'a, T>
-where
-    T: Real + PartialOrd,
-    for<'b> &'b T: Add<&'b T, Output = T> + 
-                   Sub<&'b T, Output = T> + 
-                   Mul<&'b T, Output = T> + 
-                   Div<&'b T, Output = T> +
-                   Neg<Output = T>,
+impl<'a, T: Real> RateCurve<T> for ContinuousRateCurve<'a, T>
 {
-    // The associated type must match the generic used in the struct
-    type T = T;
-
-    fn zero_rate(&self, _t: &T) -> T {
-        // Accessing the value from the inner rate object
+    fn zero_rate(&self, _t: T) -> T {
         self.rate.value.clone()
     }
 
-    fn discount_factor(&self, t: &T) -> T {
-        // Since compounding is Continuous, this performs: exp(-r * t)
-        // Ensure that the 't' passed in matches the curve's expected type
+    fn discount_factor(&self, t: T) -> T {
         self.rate.discount_factor(t)
     }
 }

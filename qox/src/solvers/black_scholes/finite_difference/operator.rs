@@ -50,6 +50,7 @@ where
     ) {
         let cache = self.cache.borrow();
         let c = cache.as_ref().expect("BsOperatorCache not initialized");
+        
         let n = self.size();
 
         // Copy RHS

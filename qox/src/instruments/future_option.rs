@@ -1,64 +1,42 @@
 use chrono::{DateTime, Utc};
-use crate::{core::period::{DayCountConvention, DefaultPeriodCalculator, PeriodCalculator}, traits::{instrument::{Instrument, OptionInstrument}, real::Real}};
+use crate::{core::period::{DayCountConvention, DefaultPeriodCalculator, PeriodCalculator}, traits::{instrument::{Instrument, OptionInstrument, OptionType}, market_view::OptionMarketView, payoff::Payoff, rate_curve::RateCurve, real::Real, vol_surface::VolSurface}};
 
 #[derive(Debug, Clone, Copy)]
-pub enum OptionType {
-    Call,
-    Put,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct FutureOption {
+pub struct FutureOption<P> {
     pub strike: f64,
     pub expiry: DateTime<Utc>,
     pub option_type: OptionType,
+    pub payoff: P,
 }
 
-impl FutureOption {
-    pub fn new(strike: f64, expiry: DateTime<Utc>, option_type: OptionType) -> Self {
+impl<P> FutureOption<P> {
+    pub fn new(strike: f64, expiry: DateTime<Utc>, option_type: OptionType, payoff: P) -> Self {
         Self {
             strike: strike,
             expiry,
             option_type,
+            payoff,
         }
     }
-
-    // pub fn payoff(&self, futures_price: T) -> T {
-    //     match self.option_type {
-    //         OptionType::Call => (futures_price - self.strike.clone()).max(T::from_f64(0.0)),
-    //         OptionType::Put => (self.strike.clone() - futures_price).max(T::from_f64(0.0)),
-    //     }
-    // }
-
-    // pub fn is_in_the_money(&self, futures_price: T) -> bool {
-    //     match self.option_type {
-    //         OptionType::Call => futures_price > self.strike.clone(),
-    //         OptionType::Put => futures_price < self.strike.clone(),
-    //     }
-    // }
 }
 
-impl Instrument for FutureOption {}
+impl<P> Instrument for FutureOption<P> {}
 
-impl OptionInstrument for FutureOption {
-    type T = f64;
+impl<T: Real, P: Payoff<T> + Copy> OptionInstrument<T, P> for FutureOption<P> {
+    
     fn strike(self) -> f64 {
         self.strike
     }
 
-    fn is_call(self) -> bool {
-        matches!(self.option_type, OptionType::Call)
+    fn option_type(self) -> crate::traits::instrument::OptionType {
+        self.option_type
     }
 
-    fn time_to_expiry(self) -> Self::T {
-        // 1. Get current date in UTC and convert to NaiveDate
+    fn years_to_expiry(self) -> T {
+
         let now = Utc::now().date_naive();
-        
-        // 2. Extract the NaiveDate from your expiry (assuming self.expiry is a DateTime or NaiveDate)
         let expiry_date = self.expiry.date_naive();
 
-        // 3. Use the DefaultPeriodCalculator to get the year fraction
-        // Note: 'convention' would likely be a field on your struct
         let calculator = DefaultPeriodCalculator;
         let years = calculator.year_fraction(
             now, 
@@ -66,7 +44,20 @@ impl OptionInstrument for FutureOption {
             DayCountConvention::Actual365Fixed,
         );
 
-        // 4. Convert the wrapped f64 (Years) into your generic type T
         Real::from_f64(years.0)
     }
+    
+    fn evaluate<M, RC, VS>(self, _market_frame: &M) -> T 
+    where
+        RC: RateCurve<T>,
+        VS: VolSurface<T>,
+        M: OptionMarketView<T, RC, VS> {
+        todo!()
+    }
+    
+    fn get_payoff(self) -> P {
+        todo!()
+    }
+
+    
 }

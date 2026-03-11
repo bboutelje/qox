@@ -1,8 +1,7 @@
-use std::ops::{Add, Div, Mul, Sub};
-
 use chrono::NaiveDate;
 
 use crate::{core::{error::CurveError, period::{DayCountConvention, PeriodCalculator}, tenor::Tenor}, math::interpolate::LinearInterpolator, traits::{real::Real, vol_surface::VolSurface}};
+use crate::math::interpolate::{Interpolator1D};
 
 #[derive(Debug, Clone, Copy)]
 pub struct FlatVolSurface<T> {
@@ -17,14 +16,14 @@ impl<T> FlatVolSurface<T> {
     }
 }
 
-impl<T: Real> VolSurface for FlatVolSurface<T>
+impl<T: Real> VolSurface<T> for FlatVolSurface<T>
 {
-    type T = T;
-    fn volatility(&self, _t: &T) -> T {
+    fn volatility(&self, _strike: f64, _t: T) -> T {
         self.vol.clone()
     }
 }
 
+#[derive(Clone)]
 pub struct InterpolatedVolSurface<T: Real> {
     #[allow(dead_code)]
     reference_date: NaiveDate,
@@ -34,7 +33,7 @@ pub struct InterpolatedVolSurface<T: Real> {
     _interpolator: LinearInterpolator<T>,
 }
 
-impl<T: Real + PartialOrd> InterpolatedVolSurface<T> {
+impl<T: Real> InterpolatedVolSurface<T> {
     pub fn new(
         reference_date: NaiveDate,
         tenors: Vec<Tenor>,
@@ -73,8 +72,9 @@ impl<T: Real + PartialOrd> InterpolatedVolSurface<T> {
     }
 }
 
-// impl VolSurface<f64> for InterpolatedVolSurface< {
-//     fn volatility(&self, t: f64) -> f64 {
-//         self.interpolator.interpolate(t)
-//     }
-// }
+impl<T: Real> VolSurface<T> for InterpolatedVolSurface<T> {
+    fn volatility(&self, _strike: f64, t: T) -> T {
+        // Use your internal interpolator to compute the volatility
+        self._interpolator.interpolate(t)
+    }
+}

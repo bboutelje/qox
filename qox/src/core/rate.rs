@@ -21,7 +21,7 @@ pub enum Frequency {
 }
 
 pub trait Discountable<T: Real> {
-    fn discount_factor(&self, t: &T) -> T;
+    fn discount_factor(&self, t: T) -> T;
 }
 
 
@@ -49,15 +49,11 @@ impl<'a, T> InterestRate<'a, T> {
     }
 }
 
-impl<'a, T: Real + PartialOrd> Discountable<T> for InterestRate<'a, T> 
-where
-    for<'b> &'b T: Add<&'b T, Output = T> + Sub<&'b T, Output = T> + 
-                   Mul<&'b T, Output = T> + Div<&'b T, Output = T> +
-                   Neg<Output = T>,
+impl<'a, T: Real> Discountable<T> for InterestRate<'a, T> 
 {
-    fn discount_factor(&self, t: &T) -> T {
+    fn discount_factor(&self, t: T) -> T {
         let one = T::one();
-        let r = &self.value; // Borrow the rate once
+        let r = self.value;
 
         match self.compounding {
             Compounding::Simple => {
@@ -66,27 +62,26 @@ where
             }
 
             Compounding::Continuous => {
-                // df = exp(-(r * t))
-                let rt = r * t; // Multiplying &T * &T
-                (-&rt).exp()
+                let rt = r * t;
+                (-rt).exp()
             }
 
             Compounding::Compounded => {
                 let f = T::from_f64(self.frequency as i32 as f64);
                 // df = 1 / (1 + r/f)^(f*t)
-                let base = &one + &(r / &f);
-                let exponent = &f * t;
-                &one / &base.powf(exponent)
+                let base = one + (r / f);
+                let exponent = f * t;
+                one / base.powf(exponent)
             }
 
             Compounding::SimpleThenCompounded => {
-                if t <= &one {
-                    &one / &(one + r * t)
+                if t <= one {
+                    one / (one + r * t)
                 } else {
                     let f = T::from_f64(self.frequency as i32 as f64);
-                    let base = &one + &(r / &f);
-                    let exponent = &f * t;
-                    &one / &base.powf(exponent)
+                    let base = one + (r / f);
+                    let exponent = f * t;
+                    one / base.powf(exponent)
                 }
             }
         }

@@ -1,15 +1,16 @@
 pub mod evaluator;
 pub mod evaluator_kernel;
 
-use crate::{instruments::future_option::OptionType, traits::{payoff::Payoff, real::Real}};
+use crate::traits::{instrument::OptionType, payoff::Payoff, real::Real};
 
+#[derive(Copy, Clone)]
 pub struct VanillaPayoff {
     pub strike: f64,
     pub option_type: OptionType,
 }
 
-impl Payoff for VanillaPayoff {
-    fn calculate<T:Real>(&self, spot: T) -> T
+impl<T:Real> Payoff<T> for VanillaPayoff {
+    fn calculate(&self, spot: T) -> T
     {
         let k = T::from_f64(self.strike);
         match self.option_type {

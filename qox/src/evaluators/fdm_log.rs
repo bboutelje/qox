@@ -1,6 +1,6 @@
 // use std::ops::{Add, Div, Mul, Sub};
 
-// use crate::{market::{market_data::OptionMarketData, vol_surface::VolSurface}, solvers::finite_difference::{meshing::{log::LogMesher1d, uniform::UniformMesher1d}, operators_log::{TridiagonalCoeffs, solve_tridiagonal}}, traits::{fdm_1d_mesher::Mesher1d, instrument::OptionInstrument, pricing_engine::OptionEvaluable, rate_curve::RateCurve, real::Real}};
+// use crate::{market::{market_data::OptionMarketFrame, vol_surface::VolSurface}, solvers::finite_difference::{meshing::{log::LogMesher1d, uniform::UniformMesher1d}, operators_log::{TridiagonalCoeffs, solve_tridiagonal}}, traits::{fdm_1d_mesher::Mesher1d, instrument::OptionInstrument, pricing_engine::OptionEvaluable, rate_curve::RateCurve, real::Real}};
 
 // pub struct Evaluator {
 //     pub config: FdmConfig,
@@ -26,7 +26,7 @@
 //     //                std::ops::Neg<Output = T>
 
 // {
-//     fn evaluate(&self, instrument: &I, market: &OptionMarketData<SReal, RcReal, VsReal, RC, VS>) -> T {
+//     fn evaluate(&self, instrument: &I, market: &OptionMarketFrame<SReal, RcReal, VsReal, RC, VS>) -> T {
 //         // 1. Boundaries in Log Space
 //         let s_min = T::from_f64(0.01); 
 //         let s_max = &market.spot_price * &T::from_f64(5.0); // Slightly wider for log-space
@@ -40,7 +40,7 @@
 
 //         let mut v = self.initialize_payoff(instrument, &mesher);
         
-//         let dt = T::from_f64(instrument.time_to_expiry().scalar() / self.config.time_steps as f64);
+//         let dt = T::from_f64(instrument.years_to_expiry().scalar() / self.config.time_steps as f64);
 
 //         let r = market.rate_curve.zero_rate(&T::zero());
 //         let sigma = market.vol_surface.volatility(&T::zero());
@@ -56,7 +56,7 @@
 //     fn evaluate_all(
 //         &self,
 //         _instrument: &I,
-//         _market: &OptionMarketData<T, RC, VS>,
+//         _market: &OptionMarketFrame<T, RC, VS>,
 //     ) -> crate::traits::pricing_engine::OptionEvaluation<f64>
 //     where
 //         RC: RateCurve<T>,
@@ -88,7 +88,7 @@
 //     fn step_backwards<T, RC, VS, M>(
 //         &self,
 //         v_old: &[T],
-//         market: &OptionMarketData<T, RC, VS>,
+//         market: &OptionMarketFrame<T, RC, VS>,
 //         mesher: &M,
 //         dt: &T,
 //     ) -> Vec<T>

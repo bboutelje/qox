@@ -5,7 +5,7 @@ use crate::core::{compounding::PyCompounding, day_count::PyDayCountConvention, f
 
 #[pyclass(name = "InterestRate")]
 pub struct PyInterestRate {
-    inner: InterestRate<'static, f64>,
+    pub inner: InterestRate<'static, f64>,
 }
 
 #[pymethods]
@@ -13,11 +13,10 @@ impl PyInterestRate {
     #[new]
     fn new(
         rate: f64,
-        dcc: PyDayCountConvention,
         compounding: PyCompounding,
         frequency: PyFrequency,
+        dcc: PyDayCountConvention,
     ) -> Self {
-        // Map your Python wrappers into the Core types
         let core_dcc: DayCountConvention = dcc.into();
         let core_compounding: Compounding = compounding.into();
         let core_frequency: Frequency = frequency.into();
@@ -28,7 +27,7 @@ impl PyInterestRate {
     }
 
     fn discount_factor(&self, t: f64) -> f64 {
-        self.inner.discount_factor(&t)
+        self.inner.discount_factor(t)
     }
 
     // Property to inspect the rate

@@ -1,7 +1,5 @@
-use crate::traits::{real::Real};
 
-pub trait VolSurface
+pub trait VolSurface<T>
 {
-    type T: Real;
-    fn volatility(&self, t: &Self::T) -> Self::T;
+    fn volatility(&self, strike: f64, t: T) -> T;
 }

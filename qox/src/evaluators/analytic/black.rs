@@ -1,6 +1,6 @@
 // use std::ops::{Add, Div, Mul, Sub};
 
-// use crate::market::market_data::OptionMarketData;
+// use crate::market::market_data::OptionMarketFrame;
 // use crate::market::vol_surface::VolSurface;
 // use crate::real::dual2_vec::Dual2Vec64;
 // use crate::traits::pricing_engine::{OptionEvaluable, OptionEvaluation};
@@ -15,7 +15,7 @@
 //     fn compute<T, I, RC, VS>(
 //         &self,
 //         instrument: &I,
-//         market: &OptionMarketData<T, RC, VS>,
+//         market: &OptionMarketFrame<T, RC, VS>,
 //     ) -> T
 //     where
 //         T: Real, 
@@ -27,7 +27,7 @@
 //     {
 //         let f = &market.spot_price;
 //         let k = T::from_f64(instrument.strike().scalar());
-//         let t = T::from_f64(instrument.time_to_expiry().scalar());
+//         let t = T::from_f64(instrument.years_to_expiry().scalar());
 
 //         let sigma = market.vol_surface.volatility(&t);
 //         let df = market.rate_curve.discount_factor(&t);
@@ -73,11 +73,11 @@
 // //     fn price(
 // //         &self,
 // //         instrument: &I,
-// //         market: &OptionMarketData<HyperDual, RC, VS>,
+// //         market: &OptionMarketFrame<HyperDual, RC, VS>,
 // //     ) -> HyperDual {
 // //         let f = market.spot_price.clone();
 // //         let k = HyperDual::from_f64(instrument.strike().scalar());
-// //         let t = HyperDual::from_f64(instrument.time_to_expiry().scalar());
+// //         let t = HyperDual::from_f64(instrument.years_to_expiry().scalar());
 // //         let sigma = HyperDual(market.vol_surface.volatility(t).0);
 // //         let df = HyperDual(market.rate_curve.discount_factor(t).0);
 // //         let is_call = instrument.is_call();
@@ -99,7 +99,7 @@
 // //     fn price_and_greeks(
 // //         &self,
 // //         instrument: &I,
-// //         market: &OptionMarketData<HyperDual, RC, VS>,
+// //         market: &OptionMarketFrame<HyperDual, RC, VS>,
 // //     ) -> OptionEvaluation<f64>
 // //     where
 // //         RC: RateCurve<HyperDual>,
@@ -132,7 +132,7 @@
 //     fn evaluate(
 //         &self,
 //         instrument: &I,
-//         market: &OptionMarketData<DualVec64<N>, RC, VS>,
+//         market: &OptionMarketFrame<DualVec64<N>, RC, VS>,
 //     ) -> DualVec64<N> {
 //         self.compute(instrument, market)
 //     }
@@ -140,7 +140,7 @@
 //     fn evaluate_all(
 //             &self,
 //             instrument: &I,
-//             market: &OptionMarketData<DualVec64<N>, RC, VS>,
+//             market: &OptionMarketFrame<DualVec64<N>, RC, VS>,
 //         ) -> OptionEvaluation<f64>
 //         where
 //             RC: RateCurve<DualVec64<N>>,
@@ -174,7 +174,7 @@
 //     fn evaluate(
 //             &self,
 //             instrument: &I,
-//             market: &OptionMarketData<Dual2Vec64<N>, RC, VS>,
+//             market: &OptionMarketFrame<Dual2Vec64<N>, RC, VS>,
 //         ) -> Dual2Vec64<N> {
 //         self.compute(instrument, market)
 //     }
@@ -182,7 +182,7 @@
 //     fn evaluate_all(
 //             &self,
 //             instrument: &I,
-//             market: &OptionMarketData<Dual2Vec64<N>, RC, VS>,
+//             market: &OptionMarketFrame<Dual2Vec64<N>, RC, VS>,
 //         ) -> OptionEvaluation<f64>
 //         where
 //             RC: RateCurve<Dual2Vec64<N>>,

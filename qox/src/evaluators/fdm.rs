@@ -1,6 +1,6 @@
 // use std::ops::{Add, Div, Mul, Sub};
 // use crate::solvers::finite_difference::operators::{TridiagonalCoeffs, solve_tridiagonal};
-// use crate::market::{market_data::OptionMarketData, vol_surface::VolSurface};
+// use crate::market::{market_data::OptionMarketFrame, vol_surface::VolSurface};
 // use crate::solvers::finite_difference::grid::FdmGrid;
 // use crate::traits::{instrument::OptionInstrument, pricing_engine::OptionEvaluable, rate_curve::RateCurve, real::Real};
 
@@ -26,7 +26,7 @@
 //     //                Mul<&'a T, Output = T> + Div<&'a T, Output = T> +
 //     //                std::ops::Neg<Output = T>
 // {
-//     fn evaluate(&self, instrument: &I, market: &OptionMarketData<SReal, RcReal, VsReal, RC, VS>) -> T {
+//     fn evaluate(&self, instrument: &I, market: &OptionMarketFrame<SReal, RcReal, VsReal, RC, VS>) -> T {
         
 //         let s_min = T::from_f64(0.01); 
 //         let s_max = &market.spot_price * &T::from_f64(3.0); 
@@ -34,7 +34,7 @@
 
 //         let grid = FdmGrid::new_linear_space(s_min, s_max, self.config.nodes);
 //         let mut v = self.initialize_payoff(instrument, &grid);
-//         let dt = T::from_f64(instrument.time_to_expiry().scalar() / self.config.time_steps as f64);
+//         let dt = T::from_f64(instrument.years_to_expiry().scalar() / self.config.time_steps as f64);
 
 //         // 1. Build the operator ONCE
 //         let r = market.rate_curve.zero_rate(&T::zero());
@@ -49,7 +49,7 @@
 
 //         self.interpolate(&grid, &v, &market.spot_price)
 //     }
-//     // fn price(&self, instrument: &I, market: &OptionMarketData<T, RC, VS>) -> T {
+//     // fn price(&self, instrument: &I, market: &OptionMarketFrame<T, RC, VS>) -> T {
 //     //     let s_min = T::from_f64(0.01); 
 //     //     let s_max = &market.spot_price * &T::from_f64(3.0); 
         
@@ -58,7 +58,7 @@
         
 //     //     let mut v = self.initialize_payoff(instrument, &grid);
 
-//     //     let dt = T::from_f64(instrument.time_to_expiry().scalar() / self.config.time_steps as f64);
+//     //     let dt = T::from_f64(instrument.years_to_expiry().scalar() / self.config.time_steps as f64);
 //     //     for _ in 0..self.config.time_steps {
 //     //         // Pass the grid into the stepping logic
 //     //         v = self.step_backwards(&v, market, &grid, &dt);
@@ -70,7 +70,7 @@
 //     fn evaluate_all(
 //         &self,
 //         _instrument: &I,
-//         _market: &OptionMarketData<T, RC, VS>,
+//         _market: &OptionMarketFrame<T, RC, VS>,
 //     ) -> crate::traits::pricing_engine::OptionEvaluation<f64>
 //     where
 //         RC: RateCurve<T>,
@@ -112,7 +112,7 @@
 //     fn step_backwards<T, RC, VS>(
 //         &self,
 //         v_old: &[T],
-//         market: &OptionMarketData<T, RC, VS>,
+//         market: &OptionMarketFrame<T, RC, VS>,
 //         grid: &FdmGrid<T>,
 //         dt: &T,
 //     ) -> Vec<T>

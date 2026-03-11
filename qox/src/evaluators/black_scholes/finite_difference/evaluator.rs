@@ -1,51 +1,45 @@
-use std::ops::{Add, Div, Mul, Neg, Sub};
-use std::time::Instant;
-
 use crate::solvers::black_scholes::finite_difference::solver::{FdmConfig, Solver};
 use crate::solvers::time_stepping::crank_nicolson::{CrankNicolson};
 use crate::solvers::time_stepping::dimsim2::{self, Dimsim2};
 //use crate::solvers::time_stepping::dimsim2::{self, Dimsim2};
 use crate::solvers::time_stepping::implicit_euler::ImplicitEuler;
 use crate::solvers::time_stepping::sdirk22::{Sdirk22};
-use crate::{market::market_data::OptionMarketData};
-use crate::traits::{EvaluationResolver, instrument::OptionInstrument, pricing_engine::OptionEvaluable, rate_curve::RateCurve, real::Real, vol_surface::VolSurface};
+use crate::traits::payoff::{Payoff, PayoffAsInitialCondition};
+use crate::{market::market_frame::OptionMarketFrame};
+use crate::traits::{instrument::OptionInstrument, pricing_engine::OptionEvaluable, rate_curve::RateCurve, real::Real, vol_surface::VolSurface};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Evaluator {
     pub config: FdmConfig,
 }
 
-impl<I, SReal, TResult, RC, VS> OptionEvaluable<I, SReal, VS::T, TResult, RC, VS> for Evaluator
+impl<T, RC, VS, I, P> OptionEvaluable<T, RC, VS, I, P> for Evaluator
 where
-    I: OptionInstrument,
-    RC: RateCurve,
-    VS: VolSurface,
-    SReal: Real + PartialOrd + EvaluationResolver<RC::T, VS::T, Output = TResult>,
-    TResult: Real + PartialOrd + 
-        From<SReal> + From<I::T> + From<RC::T> +
-        From<VS::T> + From<TResult> +
-        Neg<Output = TResult>,    
+    T: Real,
+    RC: RateCurve<T>,
+    VS: VolSurface<T>,
+    I: OptionInstrument<T, P> + Copy,
+    P: Payoff<T> + Copy,
 {
-    type Result = TResult;
-
-    fn evaluate(self, instrument: I, market: OptionMarketData<SReal, RC, VS>) -> TResult {
+    fn evaluate(self, instrument: I, market: OptionMarketFrame<T, RC, VS>) -> T {
 
         let solver = Solver {
             config: FdmConfig {
                 nodes: self.config.nodes,
                 time_steps: self.config.time_steps,
-                damping_steps: self.config.damping_steps,
             },
         };
 
-        let rate = market.rate_curve.zero_rate(&RC::T::zero());
-        let vol = market.vol_surface.volatility(&VS::T::zero());
+        let rate = market.rate_curve.zero_rate(instrument.years_to_expiry());
+        let vol = market.vol_surface.volatility(0.0, T::zero());
+
+        let initial_condition = PayoffAsInitialCondition::new(instrument.get_payoff());
 
         let stepper = Dimsim2::new();
         solver.solve(
             stepper,
-            instrument, 
-            instrument.time_to_expiry(), 
+            initial_condition,
+            instrument.years_to_expiry(),
             market.spot_price,
             rate,
             vol,

@@ -1,15 +1,27 @@
-use crate::{market::market_data::MarketData, traits::{real::Real, vol_surface::VolSurface}};
-
+use crate::traits::{market_view::OptionMarketView, payoff::{InitialCondition, Payoff}, rate_curve::RateCurve, real::Real, vol_surface::VolSurface};
 
 pub trait Instrument {
 
 }
 
-pub trait OptionInstrument: Instrument + Copy {
-    type T: Real;
+#[derive(Debug, Clone, Copy)]
+pub enum OptionType {
+    Call,
+    Put,
+}
+
+pub trait OptionInstrument<T: Real, P: Payoff<T> + Copy>: Instrument {
     fn strike(self) -> f64;
-    fn is_call(self) -> bool;
-    fn time_to_expiry(self) -> Self::T;
+    fn option_type(self) -> OptionType;
+    fn years_to_expiry(self) -> T;
+
+    fn get_payoff(self) -> P;
+    
+    fn evaluate<M, RC, VS>(self, market_frame: &M) -> T 
+        where
+            M: OptionMarketView<T, RC, VS>,
+            RC: RateCurve<T>,
+            VS: VolSurface<T>;
 }
 
 pub trait FutureInstrument<T: Real>: Instrument {

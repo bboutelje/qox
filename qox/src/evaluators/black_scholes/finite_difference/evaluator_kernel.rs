@@ -1,7 +1,7 @@
 
 // use std::ops::{Add, Div, Mul, Neg, Sub};
 
-// use crate::market::market_data::OptionMarketData;
+// use crate::market::market_data::OptionMarketFrame;
 // use crate::solvers::finite_difference::meshing::{log::LogMesher1d, uniform::UniformMesher1d};
 // use crate::traits::payoff::Payoff;
 // use crate::traits::{EvaluationResolver, fdm_1d_mesher::Mesher1d, pricing_engine::OptionEvaluable, rate_curve::RateCurve, real::Real, vol_surface::VolSurface};
@@ -53,9 +53,9 @@
 //     pub fn evaluate<P, SReal, RC, VS>(
 //         &self, 
 //         payoff: &P,
-//         time_to_expiry: TReal,
-//         market: &OptionMarketData<SReal, RC, VS>,
-//         time_to_expiry: f64, // The Kernel needs this since it's no longer in the Payoff
+//         years_to_expiry: TReal,
+//         market: &OptionMarketFrame<SReal, RC, VS>,
+//         years_to_expiry: f64, // The Kernel needs this since it's no longer in the Payoff
 //     ) -> <SReal as EvaluationResolver<RC::T, VS::T>>::Output
 //     where P: Payoff,
 //         RC: RateCurve,
@@ -80,7 +80,7 @@
 //         let uniform_mesher = UniformMesher1d::new(x_min, x_max, self.config.nodes);
 //         let mesher = LogMesher1d::new(uniform_mesher);
 
-//         let dt = Self::Result::from_f64(instrument.time_to_expiry().scalar() / self.config.time_steps as f64);
+//         let dt = Self::Result::from_f64(instrument.years_to_expiry().scalar() / self.config.time_steps as f64);
 
 //         let r_raw = market.rate_curve.zero_rate(&RC::T::zero());
 //         let sigma_raw = market.vol_surface.volatility(&VS::T::zero());

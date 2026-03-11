@@ -2,9 +2,8 @@
 use std::ops::{Neg};
 use crate::solvers::black_scholes::finite_difference::meshing::log::LogMesher1d;
 use crate::solvers::black_scholes::finite_difference::meshing::uniform::UniformMesher1d;
-use crate::traits::Resolved;
 use crate::traits::payoff::{InitialCondition};
-use crate::traits::{EvaluationResolver, fdm_1d_mesher::Mesher1d, real::Real};
+use crate::traits::{fdm_1d_mesher::Mesher1d, real::Real};
 
 pub struct Solver {
     pub config: FdmConfig,
@@ -19,30 +18,21 @@ pub struct FdmConfig {
 
 impl Solver
 {
-    pub fn solve<IC, TReal, SReal, RCReal, VSReal>(
+    pub fn solve<IC, T>(
         self, 
         initial_condition: IC,
-        time_to_expiry: TReal,
-        spot: SReal,
-        rate: RCReal,
-        vol: VSReal
-        ) -> Resolved<SReal, RCReal, VSReal>
+        years_to_expiry: T,
+        spot: T,
+        rate: T,
+        vol: T
+        ) -> T
         where 
-            TReal: Real,
-            RCReal: Real,
-            VSReal: Real,
-            SReal: Real + EvaluationResolver<RCReal, VSReal>,
-            IC: InitialCondition<Resolved<SReal, RCReal, VSReal>> + Copy,
-            Resolved<SReal, RCReal, VSReal>: Real + 
-                From<SReal> + 
-                From<TReal> + 
-                From<RCReal> + 
-                From<VSReal> + 
-                Neg<Output = Resolved<SReal, RCReal, VSReal>>,
+            T: Real,
+            IC: InitialCondition<T> + Copy
     {
-        let s_min = <Resolved<SReal, RCReal, VSReal>>::from_f64(0.01);
-        let spot_res: Resolved<SReal, RCReal, VSReal> = spot.clone().into();
-        let s_max = spot_res * <Resolved<SReal, RCReal, VSReal>>::from_f64(3.0);
+        let s_min = T::from_f64(0.01);
+
+        let s_max = spot * T::from_f64(3.0);
         
         let x_min = s_min.ln();
         let x_max = s_max.ln();
@@ -50,16 +40,16 @@ impl Solver
         let uniform_mesher = UniformMesher1d::new(x_min, x_max, self.config.nodes);
         let mesher = LogMesher1d::new(uniform_mesher);
 
-        let dt: Resolved<SReal, RCReal, VSReal> = (time_to_expiry / TReal::from_f64(self.config.time_steps as f64)).into();
+        let dt: T = (years_to_expiry / T::from_f64(self.config.time_steps as f64)).into();
 
-        let r: Resolved<SReal, RCReal, VSReal> = rate.into();
-        let sigma: Resolved<SReal, RCReal, VSReal> = vol.into();
+        let r: T = rate.into();
+        let sigma: T = vol.into();
 
         let (a, c_prime, m_inv) = self.setup_bs_solver(&mesher, r, sigma, dt);
 
         let mut v_curr = self.initialize_payoff(initial_condition, &mesher);
-        let mut v_next = vec![<Resolved<SReal, RCReal, VSReal>>::zero(); self.config.nodes];
-        let mut d_scratch = vec![<Resolved<SReal, RCReal, VSReal>>::zero(); self.config.nodes];
+        let mut v_next = vec![T::zero(); self.config.nodes];
+        let mut d_scratch = vec![T::zero(); self.config.nodes];
 
         //let duration = start_time.elapsed();
 
@@ -81,7 +71,7 @@ impl Solver
             std::mem::swap(&mut v_curr, &mut v_next);
         }
 
-        let s_spot: Resolved<SReal, RCReal, VSReal> = spot.clone().into();
+        let s_spot: T = spot.clone().into();
         let res = self.interpolate(&mesher, &v_curr, s_spot);
 
         res
@@ -195,7 +185,7 @@ impl Solver {
     //     T: Real,
     //     M: Mesher1d<T>
     // {
-    //     //type T = <SReal as EvaluationResolver<RCReal, VSReal>>::Output;
+    //     //type T = <T as EvaluationResolver<T, T>>::Output;
         
     //     // Since it's a uniform log-mesher, h_plus and h_minus are constant.
     //     // We can just grab the first one (index 1 is safe for internal nodes).
