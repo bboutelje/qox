@@ -1,5 +1,4 @@
-
-use crate::traits::{instrument::{OptionInstrument, OptionType}, rate_curve::RateCurve, real::Real, vol_surface::VolSurface};
+use crate::traits::real::Real;
 
 pub trait Payoff<T: Real> 
 {
@@ -26,7 +25,6 @@ impl<T: Real, P: Payoff<T> + Copy> PayoffAsInitialCondition<T, P> {
     }
 }
 
-// You must explicitly add the + Real bound to P here
 impl<T, P> InitialCondition<T> for PayoffAsInitialCondition<T, P>
 where
     T: Real,
@@ -36,16 +34,3 @@ where
         self.payoff.calculate(spot)
     }
 }
-// impl<T, I> InitialCondition<T> for &I
-// where 
-//     T: Real,
-//     I: OptionInstrument<T>,
-// {
-//     fn get_value(self, spot: T) -> T {
-//         let strike = T::from_f64(&self.strike());
-//         match self.option_type() {
-//             OptionType::Call => (spot - strike).max(T::zero()),
-//             OptionType::Put => (strike - spot).max(T::zero()),
-//         }
-//     }
-// }

@@ -1,8 +1,7 @@
 use crate::solvers::black_scholes::finite_difference::solver::{FdmConfig, Solver};
 use crate::solvers::time_stepping::crank_nicolson::{CrankNicolson};
-use crate::solvers::time_stepping::dimsim2::{self, Dimsim2};
+use crate::solvers::time_stepping::dimsim2::{Dimsim2};
 //use crate::solvers::time_stepping::dimsim2::{self, Dimsim2};
-use crate::solvers::time_stepping::implicit_euler::ImplicitEuler;
 use crate::solvers::time_stepping::sdirk22::{Sdirk22};
 use crate::traits::payoff::{Payoff, PayoffAsInitialCondition};
 use crate::{market::market_frame::OptionMarketFrame};

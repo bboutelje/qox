@@ -1,6 +1,4 @@
 
-use std::ops::{Neg};
-use crate::solvers::black_scholes::finite_difference::meshing::log::LogMesher1d;
 use crate::solvers::black_scholes::finite_difference::meshing::uniform::UniformMesher1d;
 use crate::traits::payoff::{InitialCondition};
 use crate::traits::{fdm_1d_mesher::Mesher1d, real::Real};
@@ -37,8 +35,7 @@ impl Solver
         let x_min = s_min.ln();
         let x_max = s_max.ln();
 
-        let uniform_mesher = UniformMesher1d::new(x_min, x_max, self.config.nodes);
-        let mesher = LogMesher1d::new(uniform_mesher);
+        let mesher = UniformMesher1d::new(x_min, x_max, self.config.nodes);
 
         let dt: T = (years_to_expiry / T::from_f64(self.config.time_steps as f64)).into();
 
@@ -51,13 +48,6 @@ impl Solver
         let mut v_next = vec![T::zero(); self.config.nodes];
         let mut d_scratch = vec![T::zero(); self.config.nodes];
 
-        //let duration = start_time.elapsed();
-
-        //println!("setup took: {:?}", duration);
-
-        //let start_time = Instant::now();
-        
-        // 3. Time-stepping loop (European)
         for _ in 0..self.config.time_steps {
             Self::solve_step_inplace(
                 a,
@@ -91,7 +81,7 @@ impl Solver {
         (0..mesher.size())
             .map(|i| {
                 let s = mesher.location(i);
-                initial_condition.get_value(s)
+                initial_condition.get_value(s).exp()
             })
             .collect()
     }
@@ -104,31 +94,26 @@ impl Solver {
         dt: T
     ) -> (T, Vec<T>, Vec<T>) 
     {
-        let n = mesher.size();
+        let n: usize = mesher.size();
         let h = mesher.h_plus()[1];
         let h2 = h * h;
 
-        // --- Step A: Discretization (The "build_bs_coeffs" part) ---
         let vol_sq = sigma * sigma;
         let drift = r - T::from_f64(0.5) * vol_sq;
         let diffusion = T::from_f64(0.5) * vol_sq;
         let neg_dt = -dt;
 
-        // Local Operator L (Uniform Central Difference)
         let l_row = (diffusion / h2) - (drift / (h * T::from_f64(2.0)));
         let d_row = (diffusion * T::from_f64(-2.0) / h2) - r;
         let u_row = (diffusion / h2) + (drift / (h * T::from_f64(2.0)));
 
-        // Implicit Matrix A = (I - dt*L)
         let a = neg_dt * l_row;
         let b = T::one() - (dt * d_row);
         let c = neg_dt * u_row;
 
-        // --- Step B: Factorization (The "factorize" part) ---
         let mut c_prime = vec![T::zero(); n];
         let mut m_inv = vec![T::zero(); n];
 
-        // Boundary i=0
         m_inv[0] = T::one(); 
         c_prime[0] = T::zero();
 
@@ -139,10 +124,8 @@ impl Solver {
             c_prime[i] = c * m_i;
         }
         
-        //m_inv[n - 1] = T::one();
         let m_last = b - (a * c_prime[n - 2]);
         m_inv[n - 1] = T::one() / m_last;
-
 
         (a, c_prime, m_inv)
     }
@@ -155,9 +138,10 @@ impl Solver {
         v_curr: &[T],       // Input: Option prices at t
         v_next: &mut [T],   // Output: Option prices at t + dt
         d_scratch: &mut [T], // Forward sweep scratchpad
-    ) where
+    ) 
+    where
         T: Real
-{
+    {
         let n = v_curr.len();
 
         // --- 1. Forward Sweep (Solve L * d = v_curr) ---

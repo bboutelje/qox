@@ -1,6 +1,6 @@
 use std::{cmp::Ordering, ops::{Add, Div, Mul, Neg, Sub}};
 use crate::traits::real::Real;
-use num_dual::{Derivative, DualNum, DualStruct, DualVec};
+use num_dual::{Derivative, DualStruct, DualVec};
 use nalgebra::Const;
 use nalgebra::ComplexField;
 

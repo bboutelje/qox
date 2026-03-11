@@ -4,8 +4,6 @@ use chrono::{Duration, Utc};
 use qox::evaluators::black_scholes::finite_difference::evaluator::Evaluator;
 
 use qox::instruments::stock_option::StockOption;
-use qox::real::dual::Dual;
-use qox::real::dual_array::DualArray;
 use qox::solvers::black_scholes::finite_difference::solver::FdmConfig;
 use qox::traits::instrument::OptionType;
 use qox::traits::real::Real;
@@ -17,10 +15,10 @@ pub fn main() {
     // let vol = NumDualVec::<2>::var(0.2, 0);
     // let rate = NumDualVec::<2>::var(0.05, 1);
 
-    let vol = DualArray::<2>::var(0.2, 0); 
-    let rate = DualArray::<2>::var(0.05, 1);
+    // let vol = DualArray::<2>::var(0.2, 0); 
+    // let rate = DualArray::<2>::var(0.05, 1);
 
-    let vol = Dual::var(0.2);
+    // let vol = Dual::var(0.2);
 
     let spot = 95.0;
     let vol = 0.2;

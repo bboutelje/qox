@@ -1,5 +1,3 @@
-use std::ops::{Add, Div, Mul, Neg, Sub};
-
 use chrono::NaiveDate;
 use crate::core::error::CurveError;
 use crate::core::period::{DayCountConvention, PeriodCalculator};

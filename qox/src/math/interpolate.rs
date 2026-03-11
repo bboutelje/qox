@@ -1,5 +1,3 @@
-use std::ops::{Add, Div, Mul, Sub};
-
 use crate::{core::error::InterpolationError, traits::real::Real};
 
 pub trait Interpolator1D<T> {
