@@ -53,7 +53,6 @@ impl Solver {
         if R > 1 {
             let n = self.config.nodes;
             let (y_slice, f_slice) = state.items.split_at_mut(n);
-            // Use the operator to compute f_0 = L(y_0)
             operator.apply_into(y_slice, zero,f_slice); 
         }
 

@@ -12,6 +12,7 @@ pub mod payoff;
 pub mod time_stepper;
 pub mod linear_operator;
 pub mod market_view;
+pub mod transform;
 
 // pub trait EvaluationResolver<RC, VS> {
 //     type Output;
