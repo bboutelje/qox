@@ -4,7 +4,7 @@ use chrono::{Duration, Utc};
 use qox::evaluators::black_scholes::finite_difference::evaluator::Evaluator;
 
 use qox::instruments::stock_option::StockOption;
-use qox::solvers::black_scholes::finite_difference::solver::FdmConfig;
+use qox::solvers::black_scholes::finite_difference::solver_old::FdmConfig;
 use qox::traits::instrument::OptionType;
 use qox::traits::real::Real;
 use qox::{market::{market_frame::OptionMarketFrame, rate_curve::ContinuousRateCurve, vol_surface::FlatVolSurface}};
@@ -54,7 +54,7 @@ pub fn main() {
     // }
     let duration = start.elapsed();
 
-    println!("Price: {:.4}", result_price.scalar());
+    println!("Price: {:.8}", result_price.scalar());
     // let vega = result_price.0.eps.unwrap_generic(Const::<2>, nalgebra::U1)[0];
     // println!("Vega:  {:.4}", vega);
 

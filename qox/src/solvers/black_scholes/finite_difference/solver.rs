@@ -1,65 +1,53 @@
-use crate::solvers::time_stepping::glm::GlmState;
-use crate::traits::linear_operator::LinearOperator;
-use crate::traits::time_stepper::TimeStepper;
-use crate::{solvers::{black_scholes::finite_difference::{meshing::{log::LogMesher1d, uniform::UniformMesher1d}, operator::BsOperator}, time_stepping::glm::GlmWorkspace}, traits::{fdm_1d_mesher::Mesher1d, payoff::InitialCondition, real::Real}};
+use std::time::Instant;
+
+use crate::{solvers::{black_scholes::finite_difference::solver_old::FdmConfig, time_stepping::glm::{GlmState, GlmWorkspace}}, traits::{fdm_mesher::Mesher1d, fdm_process::FdmProcess, linear_operator::LinearOperator, payoff::InitialConditions, real::Real, time_stepper::TimeStepper, transform::Transform}};
 
 pub struct Solver {
     pub config: FdmConfig,
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct FdmConfig {
-    pub nodes: usize,
-    pub time_steps: usize,
-}
-
 impl Solver {
-
-    pub fn solve<IC, T, Step, const S: usize, const R: usize>(
-        self, 
-        stepper: Step, 
-        initial_condition: IC,
+    pub fn solve<T, Tr, L, M, P, Step, IC, const S: usize, const R: usize>(
+        &self,
+        process: P,
+        stepper: Step,
+        initial_conditions: IC,
+        mesher: M,
         years_to_expiry: T,
-        spot: T,
-        rate: T,
-        vol: T
+        spot: T
     ) -> T
-    where 
+    where
         T: Real,
-        IC: InitialCondition<T> + Copy,
+        Tr: Transform<T> + Copy,
+        M: Mesher1d<T>,
         Step: TimeStepper<T, S, R>,
+        P: FdmProcess<T, L, M, Tr>,
+        L: LinearOperator<T>,
+        IC: InitialConditions<T> + Copy,
     {
-        let zero = T::zero();
-        
-        let s_min = T::from_f64(0.01);
-        let s_max = spot * T::from_f64(5.0);
-        
-        let mesher = LogMesher1d::new(UniformMesher1d::new(s_min.ln(), s_max.ln(), self.config.nodes));
         let dt = years_to_expiry / T::from_f64(self.config.time_steps as f64);
-        
-        let operator = BsOperator {
-            mesher: &mesher,
-            r: rate.into(),
-            sigma: vol.into(),
-            cache: std::cell::RefCell::new(None),
-        };
+        let operator = process.build_operator(&mesher);
 
-        let mut state = GlmState::<T>::new(R, self.config.nodes, zero);
+        let mut state = GlmState::<T>::new(R, self.config.nodes, T::zero());
         let mut workspace = GlmWorkspace::<T>::new(S, self.config.nodes);
 
-        let initial_v = self.initialize_payoff(initial_condition, &mesher);
+        let initial_v = self.initialize_payoff(initial_conditions, &mesher);
+
+        let n = self.config.nodes;
+
         state.step_slice_mut(0).copy_from_slice(&initial_v);
 
         if R > 1 {
             let n = self.config.nodes;
             let (y_slice, f_slice) = state.items.split_at_mut(n);
-            operator.apply_into(y_slice, zero,f_slice); 
+            operator.apply_into(y_slice, T::zero(), f_slice); 
         }
+        
+        let start = Instant::now();
 
-        let n = self.config.nodes;
         for _ in 0..self.config.time_steps {
-
             let next_t = state.current_time + dt;
+
 
             for i in 0..S {
                 stepper.prepare_stage_rhs(
@@ -81,7 +69,7 @@ impl Solver {
                     stage_coeff, 
                     next_t, 
                     stage_slice, 
-                    &mut workspace.z_buffer // Pass the pre-allocated temp buffer here
+                    &mut workspace.z_buffer 
                 );
 
                 let l_stage_slice = &mut workspace.l_stages[i*n .. (i+1)*n];
@@ -92,16 +80,17 @@ impl Solver {
             state.current_time = next_t;
         }
 
-        self.interpolate(&mesher, state.step_slice(0), spot.into())
-    }
-}
+        let duration = start.elapsed();
+        println!("Time taken: {:?}", duration);
 
-impl Solver {
+        self.interpolate(&mesher, state.step_slice(0), spot)
+    }
+
     fn initialize_payoff<T, IC, M>(&self, initial_condition: IC, mesher: &M) -> Vec<T> 
-    where
-        T: Real,
-        IC: InitialCondition<T> + Copy,
-        M: Mesher1d<T>
+        where
+            T: Real,
+            IC: InitialConditions<T> + Copy,
+            M: Mesher1d<T>
     {
         (0..mesher.size())
             .map(|i| {

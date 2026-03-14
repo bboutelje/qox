@@ -112,6 +112,13 @@ impl<const N: usize> Add<NumDualVec<N>> for NumDualVec<N> {
     }
 }
 
+impl<const N: usize> std::ops::AddAssign<NumDualVec<N>> for NumDualVec<N> {
+    #[inline]
+    fn add_assign(&mut self, rhs: NumDualVec<N>) {
+        self.0 += rhs.0;
+    }
+}
+
 // Implementation for: NumDualVec - NumDualVec
 impl<const N: usize> Sub<NumDualVec<N>> for NumDualVec<N> {
     type Output = Self;

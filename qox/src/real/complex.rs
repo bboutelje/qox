@@ -63,7 +63,7 @@ impl Real for ComplexWrapper {
     }
 }
 
-use std::ops::{Add, Sub, Mul, Div, Neg};
+use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub};
 
 // --- Unary Negation ---
 impl Neg for ComplexWrapper {
@@ -78,6 +78,13 @@ impl Add for ComplexWrapper {
     type Output = Self;
     fn add(self, other: Self) -> Self {
         ComplexWrapper(self.0 + other.0)
+    }
+}
+
+impl AddAssign for ComplexWrapper {
+    fn add_assign(&mut self, other: Self) {
+        // Update the internal state directly
+        self.0 += other.0;
     }
 }
 

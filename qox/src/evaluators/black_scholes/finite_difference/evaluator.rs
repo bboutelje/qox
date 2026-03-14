@@ -1,9 +1,13 @@
-use crate::solvers::black_scholes::finite_difference::solver::{FdmConfig, Solver};
+use crate::solvers::black_scholes::finite_difference::meshing::uniform::UniformMesher1d;
+use crate::solvers::black_scholes::finite_difference::process::BlackScholesProcess;
+use crate::solvers::black_scholes::finite_difference::solver_old::{Solver};
+use crate::solvers::black_scholes::finite_difference::solver_old::FdmConfig;
+use crate::solvers::black_scholes::finite_difference::transforms::log::LogTransform;
 use crate::solvers::time_stepping::crank_nicolson::{CrankNicolson};
 use crate::solvers::time_stepping::dimsim2::{Dimsim2};
 //use crate::solvers::time_stepping::dimsim2::{self, Dimsim2};
 use crate::solvers::time_stepping::sdirk22::{Sdirk22};
-use crate::traits::payoff::{Payoff, PayoffAsInitialCondition};
+use crate::traits::payoff::{Payoff, PayoffAsInitialConditions};
 use crate::{market::market_frame::OptionMarketFrame};
 use crate::traits::{instrument::OptionInstrument, pricing_engine::OptionEvaluable, rate_curve::RateCurve, real::Real, vol_surface::VolSurface};
 
@@ -32,9 +36,24 @@ where
         let rate = market.rate_curve.zero_rate(instrument.years_to_expiry());
         let vol = market.vol_surface.volatility(0.0, T::zero());
 
-        let initial_condition = PayoffAsInitialCondition::new(instrument.get_payoff());
+        let initial_condition = PayoffAsInitialConditions::new(instrument.get_payoff());
 
         let stepper = Dimsim2::new();
+        let transform = LogTransform::new();
+        let s_min = T::from_f64(0.01);
+        let s_max = market.spot_price * T::from_f64(5.0);
+        let mesher 
+            = UniformMesher1d::new(
+                s_min,
+                s_max,
+                solver.config.nodes, 
+                transform);
+        let process = BlackScholesProcess
+        {
+            r: rate,
+            sigma: vol,
+            transform
+        };
         solver.solve(
             stepper,
             initial_condition,

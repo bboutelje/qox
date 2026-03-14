@@ -8,6 +8,6 @@ pub trait Mesher1d<T: Real>
     fn h_minus(&self) -> &[T];
     
     fn location(&self, index: usize) -> T {
-        self.centers()[index]   
+        self.centers()[index]
     }
 }

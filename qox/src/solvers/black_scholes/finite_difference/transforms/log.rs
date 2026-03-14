@@ -1,5 +1,6 @@
 use crate::traits::{real::Real, transform::Transform};
 
+#[derive(Copy, Clone)]
 pub struct LogTransform<T: Real> {
     _marker: std::marker::PhantomData<T>,
 }

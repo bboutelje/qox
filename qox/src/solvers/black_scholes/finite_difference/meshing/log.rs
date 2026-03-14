@@ -1,4 +1,4 @@
-use crate::traits::{fdm_1d_mesher::Mesher1d, real::{Real}};
+use crate::traits::{fdm_mesher::Mesher1d, real::{Real}};
 
 
 pub struct LogMesher1d<T :Real, M: Mesher1d<T>>

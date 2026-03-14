@@ -1,4 +1,4 @@
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub};
 use std::fmt::Debug;
 
 pub trait Real: 
@@ -6,6 +6,7 @@ pub trait Real:
     Copy + 
     Debug +
     Add<Self, Output = Self> + 
+    AddAssign<Self> +
     Sub<Self, Output = Self> + 
     Mul<Self, Output = Self> + 
     Div<Self, Output = Self> +

@@ -152,6 +152,26 @@ impl Add<Dual> for Dual {
     }
 }
 
+use std::ops::AddAssign;
+
+// Allows: a += b
+impl AddAssign for Dual {
+    #[inline]
+    fn add_assign(&mut self, rhs: Self) {
+        self.val += rhs.val;
+        self.grad += rhs.grad;
+    }
+}
+
+// Allows: a += &b
+impl AddAssign<&Dual> for Dual {
+    #[inline]
+    fn add_assign(&mut self, rhs: &Dual) {
+        self.val += rhs.val;
+        self.grad += rhs.grad;
+    }
+}
+
 // Implementation for: Dual - Dual
 impl Sub<Dual> for Dual {
     type Output = Self;

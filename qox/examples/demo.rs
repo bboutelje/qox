@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use chrono::{Duration, Utc};
 use qox::{instruments::stock_option::{StockOption}, market::{market_frame::{OptionMarketFrame}, rate_curve::ContinuousRateCurve, vol_surface::FlatVolSurface}, traits::{instrument::{OptionInstrument, OptionType}}};
 
@@ -19,8 +21,11 @@ pub fn main(){
         ContinuousRateCurve::new(rate),
         FlatVolSurface::new(vol),
     );
+    let start = Instant::now();
 
     let price = stock_option.evaluate(&market_frame);
 
-    println!("Price: {}", price)
+    let duration = start.elapsed();
+    println!("Price: {:.8}", price);
+    println!("Time taken: {:?}", duration);
 }

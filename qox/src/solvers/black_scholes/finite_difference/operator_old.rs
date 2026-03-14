@@ -1,4 +1,4 @@
-use crate::traits::{fdm_1d_mesher::Mesher1d, linear_operator::LinearOperator, real::Real};
+use crate::traits::{fdm_mesher::Mesher1d, linear_operator::LinearOperator, real::Real};
 
 pub struct BsOperatorCache<T> {
     pub coeff: T,
@@ -25,7 +25,6 @@ where
         self.mesher.size()
     }
 
-    // Apply L * v
     fn apply_into(&self, v: &[T], _t: T, out: &mut [T]) {
         let (l, d, u) = self.get_stencil();
         let n = self.size();
@@ -39,7 +38,6 @@ where
         out[n - 1] = T::zero();
     }
 
-    // Solve (I - coeff * L) x = b
     fn solve_inverse_into(
         &self,
         b: &[T],
@@ -85,6 +83,7 @@ where
         }
 
         let (l, d, u) = self.get_stencil();
+
         let n = self.size();
 
         // Tridiagonal matrix (I - coeff * L)

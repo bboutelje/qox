@@ -5,18 +5,18 @@ pub trait Payoff<T: Real>
     fn calculate(&self, spot: T) -> T;
 }
 
-pub trait InitialCondition<T> {
+pub trait InitialConditions<T> {
     fn get_value(self, spot: T) -> T;
 }
 
 #[derive(Copy, Clone)]
-pub struct PayoffAsInitialCondition<T: Real, P: Payoff<T>>
+pub struct PayoffAsInitialConditions<T: Real, P: Payoff<T>>
 {
     pub payoff: P,
     _marker: std::marker::PhantomData<T>,
 }
 
-impl<T: Real, P: Payoff<T> + Copy> PayoffAsInitialCondition<T, P> {
+impl<T: Real, P: Payoff<T> + Copy> PayoffAsInitialConditions<T, P> {
     pub fn new(payoff: P) -> Self {
         Self {
             payoff,
@@ -25,7 +25,7 @@ impl<T: Real, P: Payoff<T> + Copy> PayoffAsInitialCondition<T, P> {
     }
 }
 
-impl<T, P> InitialCondition<T> for PayoffAsInitialCondition<T, P>
+impl<T, P> InitialConditions<T> for PayoffAsInitialConditions<T, P>
 where
     T: Real,
     P: Payoff<T> + Copy,

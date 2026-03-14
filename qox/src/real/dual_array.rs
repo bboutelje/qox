@@ -1,4 +1,4 @@
-use std::ops::{Add, Sub, Mul, Div, Neg};
+use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub};
 use crate::traits::real::Real; // Adjust path to your Real trait
 
 //#[repr(C)]
@@ -31,6 +31,16 @@ impl<'a, const N: usize> Add<&'a DualArray<N>> for DualArray<N> {
         Self {
             val: self.val + rhs.val,
             grad: std::array::from_fn(|i| self.grad[i] + rhs.grad[i]),
+        }
+    }
+}
+
+impl<const N: usize> AddAssign<&DualArray<N>> for DualArray<N> {
+    #[inline]
+    fn add_assign(&mut self, rhs: &DualArray<N>) {
+        self.val += rhs.val;
+        for i in 0..N {
+            self.grad[i] += rhs.grad[i];
         }
     }
 }
@@ -264,5 +274,14 @@ impl<const N: usize> Sub<DualArray<N>> for DualArray<N> {
     #[inline]
     fn sub(self, rhs: Self) -> Self {
         self - &rhs
+    }
+}
+
+// Implementation for: DualArray += DualArray
+impl<const N: usize> AddAssign<DualArray<N>> for DualArray<N> {
+    #[inline]
+    fn add_assign(&mut self, rhs: DualArray<N>) {
+        // Delegate to the reference implementation
+        *self += &rhs;
     }
 }

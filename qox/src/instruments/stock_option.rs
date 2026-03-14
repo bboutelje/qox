@@ -1,5 +1,8 @@
+use std::process;
+
 use chrono::{DateTime, Utc};
-use crate::{core::period::{DayCountConvention, DefaultPeriodCalculator, PeriodCalculator}, evaluators::black_scholes::finite_difference::VanillaPayoff, solvers::{black_scholes::finite_difference::solver::{FdmConfig, Solver}, time_stepping::dimsim2::Dimsim2}, traits::{instrument::{Instrument, OptionInstrument, OptionType}, market_view::OptionMarketView, payoff::{PayoffAsInitialCondition}, real::Real}};
+use nalgebra::Transform;
+use crate::{core::period::{DayCountConvention, DefaultPeriodCalculator, PeriodCalculator}, evaluators::black_scholes::finite_difference::VanillaPayoff, market, solvers::{black_scholes::finite_difference::{meshing::uniform::UniformMesher1d, process::{BlackScholesProcess}, solver::Solver, solver_old::FdmConfig, transforms::log::LogTransform}, time_stepping::dimsim2::Dimsim2}, traits::{instrument::{Instrument, OptionInstrument, OptionType}, market_view::OptionMarketView, payoff::PayoffAsInitialConditions, real::Real}};
 use crate::traits::rate_curve::RateCurve;
 use crate::traits::vol_surface::VolSurface;
 
@@ -64,16 +67,21 @@ impl<T: Real> OptionInstrument<T, VanillaPayoff> for StockOption {
         let rate = market_frame.rate_curve().zero_rate(self.years_to_expiry());
         let vol = market_frame.vol_surface().volatility(0.0, T::zero());
 
-        let initial_condition = PayoffAsInitialCondition::new(<StockOption as OptionInstrument<T, VanillaPayoff>>::get_payoff(self));
+        let initial_conditions = PayoffAsInitialConditions::new(<StockOption as OptionInstrument<T, VanillaPayoff>>::get_payoff(self));
+        let transform = LogTransform::new();
+        let s_min = T::from_f64(0.01);
+        let s_max = market_frame.spot_price() * T::from_f64(5.0);
+        let mesher = UniformMesher1d::new(s_min.ln(), s_max.ln(), solver.config.nodes, transform);
 
+        let process = BlackScholesProcess::new(rate, vol, transform);
         let stepper = Dimsim2::new();
         solver.solve(
+            process,
             stepper,
-            initial_condition,
+            initial_conditions,
+            mesher,
             self.years_to_expiry(),
             market_frame.spot_price(),
-            rate,
-            vol,
         )
     }
     
