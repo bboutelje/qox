@@ -42,8 +42,6 @@ impl Solver {
             let (y_slice, f_slice) = state.items.split_at_mut(n);
             operator.apply_into(y_slice, T::zero(), f_slice); 
         }
-        
-        let start = Instant::now();
 
         for _ in 0..self.config.time_steps {
             let next_t = state.current_time + dt;
@@ -79,9 +77,6 @@ impl Solver {
             stepper.finalize_step(&mut state, &workspace, dt);
             state.current_time = next_t;
         }
-
-        let duration = start.elapsed();
-        println!("Time taken: {:?}", duration);
 
         self.interpolate(&mesher, state.step_slice(0), spot)
     }

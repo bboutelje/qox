@@ -59,9 +59,7 @@ impl Solver {
         }
 
         let n = self.config.nodes;
-        let start = Instant::now();
-
-        for step in 0..self.config.time_steps {
+        for _ in 0..self.config.time_steps {
 
             let next_t = state.current_time + dt;
 
@@ -95,10 +93,6 @@ impl Solver {
             stepper.finalize_step(&mut state, &workspace, dt);
             state.current_time = next_t;
         }
-
-        let duration = start.elapsed();
-        println!("Time taken: {:?}", duration);
-
 
         self.interpolate(&mesher, state.step_slice(0), spot.into())
     }

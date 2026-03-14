@@ -4,6 +4,7 @@ use std::cell::RefCell;
 // Helper to store the factorization results
 struct TridiagonalCache<T> {
     coeff: T,
+    a_prime: Vec<T>,
     c_prime: Vec<T>,
     m_inv: Vec<T>,
 }
@@ -60,6 +61,7 @@ where T: Real
         }
 
         let n = self.size();
+        let mut a_prime = vec![T::zero(); n];
         let mut c_prime = vec![T::zero(); n];
         let mut m_inv = vec![T::zero(); n];
 
@@ -67,23 +69,23 @@ where T: Real
         // Diagonal: d_i' = 1 - coeff * diag[i]
         // Off-diagonals: a_i = -coeff * lower[i], c_i = -coeff * upper[i]
         
-        
+        a_prime[0] = T::zero();
 
         let d0 = T::one() - coeff * self.diag[0];
         m_inv[0] = T::one() / d0;
         c_prime[0] = (-coeff * self.upper[0]) * m_inv[0];
 
         for i in 1..n {
-            let a = -coeff * self.lower[i];
+            a_prime[i] = -coeff * self.lower[i];
             let d = T::one() - coeff * self.diag[i];
             let c = if i < n - 1 { -coeff * self.upper[i] } else { T::zero() };
             
-            let m = d - a * c_prime[i - 1];
+            let m = d - a_prime[i] * c_prime[i - 1];
             m_inv[i] = T::one() / m;
             c_prime[i] = c * m_inv[i];
         }
 
-        *cache = Some(TridiagonalCache { coeff, c_prime, m_inv });
+        *cache = Some(TridiagonalCache { coeff, a_prime, c_prime, m_inv });
     }
 
     fn solve_inverse_into(&self, b: &[T], _coeff: T, _t: T, dest: &mut [T], z_buffer: &mut [T]) {
@@ -98,8 +100,8 @@ where T: Real
             // The Thomas algorithm forward step:
             // z_i = (b_i - a_i * z_{i-1}) / m_i
             // where a_i = -coeff * lower[i]
-            let a_scaled = -c.coeff * self.lower[i];
-            z_buffer[i] = (b[i] - a_scaled * z_buffer[i - 1]) * c.m_inv[i];
+            // let a_scaled = -c.coeff * self.lower[i];
+            z_buffer[i] = (b[i] - c.a_prime[i] * z_buffer[i - 1]) * c.m_inv[i];
         }
 
         // Back substitution: Use the precomputed c_prime
