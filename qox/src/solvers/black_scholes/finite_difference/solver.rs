@@ -4,8 +4,8 @@ use crate::{
         time_stepping::glm::{GlmState, GlmWorkspace},
     },
     traits::{
-        constraint::Constraint, fdm_mesher::Mesher1d, fdm_process::FdmProcess,
-        linear_operator::LinearOperator, payoff::InitialConditions, real::Real,
+        fdm_mesher::Mesher1d, fdm_process::FdmProcess, linear_operator::LinearOperator,
+        payoff::InitialConditions, real::Real, solver_strategy::SolverStrategy,
         time_stepper::TimeStepper, transform::Transform,
     },
 };
@@ -15,16 +15,16 @@ pub struct Solver {
 }
 
 impl Solver {
-    pub fn solve<T, Tr, L, M, P, Step, IC, C, const S: usize, const R: usize>(
+    pub fn solve<T, Tr, L, M, P, Step, IC, Strategy, const S: usize, const R: usize>(
         &self,
         process: P,
         stepper: Step,
         initial_conditions: IC,
-        constraint: C,
         mesher: M,
         dt: T,
         config: FdmConfig,
         spot: T,
+        strategy: Strategy,
     ) -> T
     where
         T: Real,
@@ -32,9 +32,9 @@ impl Solver {
         M: Mesher1d<T>,
         Step: TimeStepper<T, S, R>,
         P: FdmProcess<T, L, M, Tr>,
-        L: LinearOperator<T>,
+        L: LinearOperator<T, M>,
         IC: InitialConditions<T> + Copy,
-        C: Constraint<T, M> + Copy,
+        Strategy: SolverStrategy<T, M, L>,
     {
         let operator = process.build_operator(&mesher);
 
@@ -45,13 +45,12 @@ impl Solver {
 
         state.step_slice_mut(0).copy_from_slice(&initial_v);
 
+        let n = self.config.nodes;
         if R > 1 {
-            let n = self.config.nodes;
             let (y_slice, f_slice) = state.items.split_at_mut(n);
             operator.apply_into(y_slice, T::zero(), f_slice);
         }
 
-        let n = self.config.nodes;
         for _ in 0..config.time_steps {
             let next_t = state.current_time + dt;
 
@@ -70,15 +69,15 @@ impl Solver {
 
                 let stage_slice = &mut workspace.stages[i * n..(i + 1) * n];
 
-                operator.solve_inverse_into(
+                strategy.solve_stage(
+                    &operator,
                     &workspace.rhs_buffer,
                     stage_coeff,
                     next_t,
+                    &mesher,
                     stage_slice,
                     &mut workspace.z_buffer,
                 );
-
-                constraint.apply(stage_slice, &mesher);
 
                 let l_stage_slice = &mut workspace.l_stages[i * n..(i + 1) * n];
                 operator.apply_into(stage_slice, next_t, l_stage_slice);
@@ -86,6 +85,11 @@ impl Solver {
 
             stepper.finalize_step(&mut state, &workspace, dt);
             state.current_time = next_t;
+
+            // if R > 1 {
+            //     let (y_slice, f_slice) = state.items.split_at_mut(n);
+            //     operator.apply_into(y_slice, next_t, f_slice);
+            // }
         }
 
         self.interpolate(&mesher, state.step_slice(0), spot)

@@ -10,6 +10,7 @@ pub mod payoff;
 pub mod pricing_engine;
 pub mod rate_curve;
 pub mod real;
+pub mod solver_strategy;
 pub mod time_stepper;
 pub mod transform;
 pub mod vol_surface;

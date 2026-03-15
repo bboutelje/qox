@@ -1,5 +1,5 @@
-use num_complex::Complex;
 use crate::traits::real::Real;
+use num_complex::Complex;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct ComplexWrapper(pub Complex<f64>);
@@ -17,12 +17,12 @@ impl From<f64> for ComplexWrapper {
 }
 
 impl Real for ComplexWrapper {
-    fn from_f64(val: f64) -> Self { 
-        ComplexWrapper(Complex::new(val, 0.0)) 
+    fn from_f64(val: f64) -> Self {
+        ComplexWrapper(Complex::new(val, 0.0))
     }
-    
-    fn scalar(self) -> f64 { 
-        self.0.re 
+
+    fn scalar(self) -> f64 {
+        self.0.re
     }
 
     fn max(self, other: Self) -> Self {
@@ -33,37 +33,37 @@ impl Real for ComplexWrapper {
         if self <= other { self } else { other }
     }
 
-    fn abs(self) -> Self { 
-        ComplexWrapper(Complex::new(self.0.norm(), 0.0)) 
+    fn abs(self) -> Self {
+        ComplexWrapper(Complex::new(self.0.norm(), 0.0))
     }
 
-    fn exp(self) -> Self { 
-        ComplexWrapper(self.0.exp()) 
+    fn exp(self) -> Self {
+        ComplexWrapper(self.0.exp())
     }
 
-    fn ln(self) -> Self { 
-        ComplexWrapper(self.0.ln()) 
+    fn ln(self) -> Self {
+        ComplexWrapper(self.0.ln())
     }
 
-    fn sqrt(self) -> Self { 
-        ComplexWrapper(self.0.sqrt()) 
+    fn sqrt(self) -> Self {
+        ComplexWrapper(self.0.sqrt())
     }
 
-    fn powi(self, n: i32) -> Self { 
-        ComplexWrapper(self.0.powi(n)) 
+    fn powi(self, n: i32) -> Self {
+        ComplexWrapper(self.0.powi(n))
     }
 
-    fn powf(self, n: Self) -> Self { 
-        ComplexWrapper(self.0.powc(n.0)) 
+    fn powf(self, n: Self) -> Self {
+        ComplexWrapper(self.0.powc(n.0))
     }
-    
+
     fn norm_cdf(self) -> Self {
         let val = 0.5 * (1.0 + libm::erf(self.0.re / std::f64::consts::SQRT_2));
         ComplexWrapper(Complex::new(val, 0.0))
     }
 }
 
-use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub};
+use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub, SubAssign};
 
 // --- Unary Negation ---
 impl Neg for ComplexWrapper {
@@ -85,6 +85,13 @@ impl AddAssign for ComplexWrapper {
     fn add_assign(&mut self, other: Self) {
         // Update the internal state directly
         self.0 += other.0;
+    }
+}
+
+impl SubAssign for ComplexWrapper {
+    fn sub_assign(&mut self, other: Self) {
+        // Update the internal state directly
+        self.0 -= other.0;
     }
 }
 

@@ -9,13 +9,13 @@ pub struct BlackScholesProcess<T: Real, Tr: Transform<T>> {
     pub transform: Tr,
 }
 
-impl<T, M, Tr> FdmProcess<T, TridiagonalOperator<T>, M, Tr> for BlackScholesProcess<T, Tr>
+impl<T, M, Tr> FdmProcess<T, TridiagonalOperator<T, M>, M, Tr> for BlackScholesProcess<T, Tr>
 where
     T: Real,
     M: Mesher1d<T>,
     Tr: Transform<T> + Copy,
 {
-    fn build_operator(&self, mesher: &M) -> TridiagonalOperator<T> {
+    fn build_operator(&self, mesher: &M) -> TridiagonalOperator<T, M> {
         let n = mesher.size();
         let centers = mesher.centers();
         let h_minus = mesher.h_minus();
@@ -58,7 +58,7 @@ where
         lower[n - 1] = T::zero();
         diag[n - 1] = T::one();
 
-        TridiagonalOperator::<T>::new(lower, diag, upper)
+        TridiagonalOperator::<T, M>::new(lower, diag, upper)
     }
 
     fn transform(&self) -> Tr {

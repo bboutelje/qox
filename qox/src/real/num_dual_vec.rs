@@ -1,8 +1,11 @@
-use std::{cmp::Ordering, ops::{Add, Div, Mul, Neg, Sub}};
 use crate::traits::real::Real;
-use num_dual::{Derivative, DualStruct, DualVec};
-use nalgebra::Const;
 use nalgebra::ComplexField;
+use nalgebra::Const;
+use num_dual::{Derivative, DualStruct, DualVec};
+use std::{
+    cmp::Ordering,
+    ops::{Add, Div, Mul, Neg, Sub},
+};
 
 #[derive(Debug, Clone, Copy)]
 pub struct NumDualVec<const N: usize>(pub DualVec<f64, f64, Const<N>>);
@@ -14,7 +17,7 @@ impl<const N: usize> NumDualVec<N> {
         Self(DualVec::from_re(val))
     }
 
-    /// Creates a variable where the gradient is 1.0 at the specified index 
+    /// Creates a variable where the gradient is 1.0 at the specified index
     /// and 0.0 elsewhere.
     #[inline]
     pub fn var(val: f64, index: usize) -> Self {
@@ -30,7 +33,6 @@ impl<const N: usize> NumDualVec<N> {
 }
 
 impl<const N: usize> Real for NumDualVec<N> {
-    
     fn from_f64(v: f64) -> Self {
         NumDualVec(DualVec::from_re(v))
     }
@@ -87,17 +89,19 @@ impl<const N: usize> Real for NumDualVec<N> {
         let cdf_val = 0.5 * (1.0 + libm::erf(x / std::f64::consts::SQRT_2));
         let pdf_val = (-0.5 * x * x).exp() / (2.0 * std::f64::consts::PI).sqrt();
 
-        let new_matrix = self.0.eps
+        let new_matrix = self
+            .0
+            .eps
             .unwrap_generic(Const::<N>, nalgebra::U1)
             .map(|component| component * pdf_val);
 
         NumDualVec(DualVec::new(cdf_val, Derivative::some(new_matrix)))
     }
-    
+
     fn zero() -> Self {
         Self::from_f64(0.0)
     }
-    
+
     fn one() -> Self {
         Self::from_f64(1.0)
     }
@@ -116,6 +120,13 @@ impl<const N: usize> std::ops::AddAssign<NumDualVec<N>> for NumDualVec<N> {
     #[inline]
     fn add_assign(&mut self, rhs: NumDualVec<N>) {
         self.0 += rhs.0;
+    }
+}
+
+impl<const N: usize> std::ops::SubAssign<NumDualVec<N>> for NumDualVec<N> {
+    #[inline]
+    fn sub_assign(&mut self, rhs: NumDualVec<N>) {
+        self.0 -= rhs.0;
     }
 }
 

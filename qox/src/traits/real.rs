@@ -1,19 +1,20 @@
-use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub};
 use std::fmt::Debug;
+use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub, SubAssign};
 
-pub trait Real: 
-    Sized + 
-    Copy + 
-    Debug +
-    Add<Self, Output = Self> + 
-    AddAssign<Self> +
-    Sub<Self, Output = Self> + 
-    Mul<Self, Output = Self> + 
-    Div<Self, Output = Self> +
-    Neg<Output = Self> +
-    PartialOrd +
-    PartialEq +
-    From<f64>
+pub trait Real:
+    Sized
+    + Copy
+    + Debug
+    + Add<Self, Output = Self>
+    + AddAssign<Self>
+    + Sub<Self, Output = Self>
+    + SubAssign<Self>
+    + Mul<Self, Output = Self>
+    + Div<Self, Output = Self>
+    + Neg<Output = Self>
+    + PartialOrd
+    + PartialEq
+    + From<f64>
 {
     fn from_f64(v: f64) -> Self;
     fn scalar(self) -> f64; // No longer &self
@@ -22,7 +23,6 @@ pub trait Real:
     fn min(self, other: Self) -> Self;
 
     fn abs(self) -> Self;
-
 
     fn exp(self) -> Self;
     fn ln(self) -> Self;

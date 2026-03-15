@@ -16,7 +16,7 @@ pub struct BsOperator<'a, T: Real, M: Mesher1d<T>> {
     pub cache: std::cell::RefCell<Option<BsOperatorCache<T>>>,
 }
 
-impl<'a, T, M> LinearOperator<T> for BsOperator<'a, T, M>
+impl<'a, T, M> LinearOperator<T, M> for BsOperator<'a, T, M>
 where
     T: Real,
     M: Mesher1d<T>,
@@ -38,17 +38,10 @@ where
         out[n - 1] = T::zero();
     }
 
-    fn solve_inverse_into(
-        &self,
-        b: &[T],
-        _coeff: T,
-        _t: T,
-        dest: &mut [T],
-        z_buffer: &mut [T],
-    ) {
+    fn solve_inverse_into(&self, b: &[T], _coeff: T, _t: T, dest: &mut [T], z_buffer: &mut [T]) {
         let cache = self.cache.borrow();
         let c = cache.as_ref().expect("BsOperatorCache not initialized");
-        
+
         let n = self.size();
 
         // Copy RHS
@@ -113,6 +106,21 @@ where
             m_inv,
         });
     }
+
+    fn solve_psor_into<C>(
+        &self,
+        _b: &[T],
+        _coeff: T,
+        _constraint: &C,
+        _mesher: &M,
+        _x: &mut [T],
+        _z_buffer: &mut [T],
+    ) where
+        C: crate::traits::constraint::Constraint<T, M>,
+        M: Mesher1d<T>,
+    {
+        todo!()
+    }
 }
 
 impl<'a, T, M> BsOperator<'a, T, M>
@@ -138,5 +146,4 @@ where
 
         (l, d, u)
     }
-
 }

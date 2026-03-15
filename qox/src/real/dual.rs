@@ -1,4 +1,4 @@
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Add, Div, Mul, Neg, Sub, SubAssign};
 
 use crate::traits::real::Real;
 
@@ -162,12 +162,28 @@ impl AddAssign for Dual {
     }
 }
 
+impl SubAssign for Dual {
+    #[inline]
+    fn sub_assign(&mut self, rhs: Self) {
+        self.val -= rhs.val;
+        self.grad -= rhs.grad;
+    }
+}
+
 // Allows: a += &b
 impl AddAssign<&Dual> for Dual {
     #[inline]
     fn add_assign(&mut self, rhs: &Dual) {
         self.val += rhs.val;
         self.grad += rhs.grad;
+    }
+}
+
+impl SubAssign<&Dual> for Dual {
+    #[inline]
+    fn sub_assign(&mut self, rhs: &Dual) {
+        self.val -= rhs.val;
+        self.grad -= rhs.grad;
     }
 }
 

@@ -1,5 +1,5 @@
-use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub};
-use crate::traits::real::Real; // Adjust path to your Real trait
+use crate::traits::real::Real;
+use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub, SubAssign}; // Adjust path to your Real trait
 
 //#[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
@@ -11,13 +11,18 @@ pub struct DualArray<const N: usize> {
 impl<const N: usize> DualArray<N> {
     #[inline]
     fn constant(val: f64) -> Self {
-        Self { val, grad: [0.0; N] }
+        Self {
+            val,
+            grad: [0.0; N],
+        }
     }
 
     #[inline]
     pub fn var(val: f64, index: usize) -> Self {
         let mut grad = [0.0; N];
-        if index < N { grad[index] = 1.0; }
+        if index < N {
+            grad[index] = 1.0;
+        }
         Self { val, grad }
     }
 }
@@ -41,6 +46,16 @@ impl<const N: usize> AddAssign<&DualArray<N>> for DualArray<N> {
         self.val += rhs.val;
         for i in 0..N {
             self.grad[i] += rhs.grad[i];
+        }
+    }
+}
+
+impl<const N: usize> SubAssign<&DualArray<N>> for DualArray<N> {
+    #[inline]
+    fn sub_assign(&mut self, rhs: &DualArray<N>) {
+        self.val -= rhs.val;
+        for i in 0..N {
+            self.grad[i] -= rhs.grad[i];
         }
     }
 }
@@ -83,27 +98,39 @@ impl<const N: usize> Neg for DualArray<N> {
     type Output = Self;
     #[inline]
     fn neg(self) -> Self {
-        Self { val: -self.val, grad: self.grad.map(|da| -da) }
+        Self {
+            val: -self.val,
+            grad: self.grad.map(|da| -da),
+        }
     }
 }
 
 impl<const N: usize> From<f64> for DualArray<N> {
     #[inline]
-    fn from(v: f64) -> Self { Self::constant(v) }
+    fn from(v: f64) -> Self {
+        Self::constant(v)
+    }
 }
 
 // --- Implementation of the Real Trait ---
 
 impl<const N: usize> Real for DualArray<N> {
-    
     #[inline]
-    fn from_f64(v: f64) -> Self { Self::constant(v) }
+    fn from_f64(v: f64) -> Self {
+        Self::constant(v)
+    }
     #[inline]
-    fn scalar(self) -> f64 { self.val }
+    fn scalar(self) -> f64 {
+        self.val
+    }
     #[inline]
-    fn max(self, other: Self) -> Self { if self.val >= other.val { self } else { other } }
+    fn max(self, other: Self) -> Self {
+        if self.val >= other.val { self } else { other }
+    }
     #[inline]
-    fn min(self, other: Self) -> Self { if self.val <= other.val { self } else { other } }
+    fn min(self, other: Self) -> Self {
+        if self.val <= other.val { self } else { other }
+    }
 
     #[inline]
     fn abs(self) -> Self {
@@ -120,25 +147,37 @@ impl<const N: usize> Real for DualArray<N> {
     #[inline]
     fn exp(self) -> Self {
         let res = self.val.exp();
-        Self { val: res, grad: self.grad.map(|da| da * res) }
+        Self {
+            val: res,
+            grad: self.grad.map(|da| da * res),
+        }
     }
 
     #[inline]
     fn ln(self) -> Self {
-        Self { val: self.val.ln(), grad: self.grad.map(|da| da / self.val) }
+        Self {
+            val: self.val.ln(),
+            grad: self.grad.map(|da| da / self.val),
+        }
     }
 
     #[inline]
     fn sqrt(self) -> Self {
         let res = self.val.sqrt();
-        Self { val: res, grad: self.grad.map(|da| da / (2.0 * res)) }
+        Self {
+            val: res,
+            grad: self.grad.map(|da| da / (2.0 * res)),
+        }
     }
 
     #[inline]
     fn powi(self, n: i32) -> Self {
         let val = self.val.powi(n);
         let factor = (n as f64) * self.val.powi(n - 1);
-        Self { val, grad: self.grad.map(|da| da * factor) }
+        Self {
+            val,
+            grad: self.grad.map(|da| da * factor),
+        }
     }
 
     #[inline]
@@ -146,7 +185,9 @@ impl<const N: usize> Real for DualArray<N> {
         let val = self.val.powf(n.val);
         Self {
             val,
-            grad: std::array::from_fn(|i| val * (n.grad[i] * self.val.ln() + n.val * self.grad[i] / self.val)),
+            grad: std::array::from_fn(|i| {
+                val * (n.grad[i] * self.val.ln() + n.val * self.grad[i] / self.val)
+            }),
         }
     }
 
@@ -154,14 +195,17 @@ impl<const N: usize> Real for DualArray<N> {
     fn norm_cdf(self) -> Self {
         let val = 0.5 * (1.0 + erf(self.val / 2.0f64.sqrt()));
         let pdf = (-0.5 * self.val * self.val).exp() / (2.0 * std::f64::consts::PI).sqrt();
-        Self { val, grad: self.grad.map(|da| da * pdf) }
+        Self {
+            val,
+            grad: self.grad.map(|da| da * pdf),
+        }
     }
-    
+
     #[inline]
     fn zero() -> Self {
         Self::constant(0.0)
     }
-    
+
     #[inline]
     fn one() -> Self {
         Self::constant(1.0)
@@ -171,11 +215,17 @@ impl<const N: usize> Real for DualArray<N> {
 // Internal helper for norm_cdf
 fn erf(x: f64) -> f64 {
     let p = 0.3275911;
-    let a = [0.254829592, -0.284496736, 1.421413741, -1.453152027, 1.061405429];
+    let a = [
+        0.254829592,
+        -0.284496736,
+        1.421413741,
+        -1.453152027,
+        1.061405429,
+    ];
     let sign = if x < 0.0 { -1.0 } else { 1.0 };
     let x = x.abs();
     let t = 1.0 / (1.0 + p * x);
-    let y = 1.0 - ((((a[4]*t + a[3])*t + a[2])*t + a[1])*t + a[0])*t * (-x*x).exp();
+    let y = 1.0 - ((((a[4] * t + a[3]) * t + a[2]) * t + a[1]) * t + a[0]) * t * (-x * x).exp();
     sign * y
 }
 
@@ -240,7 +290,6 @@ impl<'a, const N: usize> Neg for &'a DualArray<N> {
     }
 }
 
-
 // Implementation for: DualArray / DualArray
 impl<const N: usize> Div<DualArray<N>> for DualArray<N> {
     type Output = Self;
@@ -283,5 +332,13 @@ impl<const N: usize> AddAssign<DualArray<N>> for DualArray<N> {
     fn add_assign(&mut self, rhs: DualArray<N>) {
         // Delegate to the reference implementation
         *self += &rhs;
+    }
+}
+
+impl<const N: usize> SubAssign<DualArray<N>> for DualArray<N> {
+    #[inline]
+    fn sub_assign(&mut self, rhs: DualArray<N>) {
+        // Delegate to the reference implementation
+        *self -= &rhs;
     }
 }

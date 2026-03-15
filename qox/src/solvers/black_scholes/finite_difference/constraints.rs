@@ -12,6 +12,10 @@ impl NoConstraint {
 impl<T: Real, M: Mesher1d<T>> Constraint<T, M> for NoConstraint {
     #[inline(always)]
     fn apply(&self, _: &mut [T], _: &M) {}
+
+    fn lower_bound(&self, _i: usize, _mesher: &M) -> T {
+        todo!()
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -34,5 +38,9 @@ impl<T: Real, IC: InitialConditions<T> + Copy, M: Mesher1d<T>> Constraint<T, M>
                 price[i] = p;
             }
         }
+    }
+
+    fn lower_bound(&self, i: usize, mesher: &M) -> T {
+        self.payoff.get_value(mesher.location(i))
     }
 }

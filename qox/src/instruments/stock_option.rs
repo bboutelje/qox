@@ -1,5 +1,9 @@
 use crate::solvers::black_scholes::finite_difference::constraints::AmericanConstraint;
+use crate::solvers::black_scholes::finite_difference::strategies::Constrained;
+use crate::solvers::time_stepping::crank_nicolson::CrankNicolson;
+use crate::solvers::time_stepping::dimsim2::Dimsim2;
 use crate::solvers::time_stepping::implicit_euler::ImplicitEuler;
+use crate::solvers::time_stepping::sdirk22::Sdirk22;
 use crate::traits::rate_curve::RateCurve;
 use crate::traits::vol_surface::VolSurface;
 use crate::{
@@ -10,7 +14,7 @@ use crate::{
             meshing::uniform::UniformMesher1d, process::BlackScholesProcess, solver::Solver,
             solver_old::FdmConfig, transforms::log::LogTransform,
         },
-        time_stepping::dimsim2::Dimsim2,
+        //time_stepping::dimsim2::Dimsim2,
     },
     traits::{
         instrument::{Instrument, OptionInstrument, OptionType},
@@ -88,16 +92,19 @@ impl<T: Real> OptionInstrument<T, VanillaPayoff> for StockOption {
         let mesher = UniformMesher1d::new(s_min.ln(), s_max.ln(), solver.config.nodes, transform);
 
         let process = BlackScholesProcess::new(rate, vol, transform);
-        let stepper = ImplicitEuler::new();
+        let stepper = Dimsim2::new();
+        let strategy = Constrained {
+            constraint: AmericanConstraint::new(initial_conditions),
+        };
         solver.solve(
             process,
             stepper,
             initial_conditions,
-            AmericanConstraint::new(initial_conditions),
             mesher,
             dt,
             solver.config,
             market_frame.spot_price(),
+            strategy,
         )
     }
 
