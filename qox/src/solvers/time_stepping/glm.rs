@@ -1,4 +1,4 @@
-use crate::traits::{linear_operator::LinearOperator, real::Real, time_stepper::TimeStepper};
+use crate::traits::{real::Real, time_stepper::TimeStepper};
 
 pub struct GlmTableau<T, const S: usize, const R: usize> {
     pub a: [[T; S]; S],
@@ -56,7 +56,6 @@ impl<T: Real> GlmWorkspace<T> {
         }
     }
 }
-
 
 pub fn step<T, const S: usize, const R: usize, F>(
     method: &impl TimeStepper<T, S, R>,
@@ -122,7 +121,7 @@ pub fn step_for_stability<T, const S: usize, const R: usize>(
         let diag_a = method.tableau().a[i][i];
         let stage_offset = i * n;
         let current_stage = &mut ws.stages[stage_offset..stage_offset + n];
-        
+
         let denom = T::one() - dt * diag_a * z;
         for k in 0..n {
             current_stage[k] = ws.rhs_buffer[k] / denom;
@@ -157,13 +156,13 @@ pub fn step_for_stability<T, const S: usize, const R: usize>(
 //     state: &mut GlmState<T>,
 //     ws: &mut GlmWorkspace<T>,
 //     dt: T,
-// ) where T: Real, Op: LinearOperator<T> 
+// ) where T: Real, Op: LinearOperator<T>
 // {
 //     let n = state.n;
-    
+
 //     for i in 0..S {
 //         let stage_time = state.current_time + tableau.c[i] * dt;
-        
+
 //         ws.rhs_buffer.fill(T::zero());
 
 //         // 1. History contribution (U matrix)
@@ -189,7 +188,7 @@ pub fn step_for_stability<T, const S: usize, const R: usize>(
 //         let diag_coeff = dt * tableau.a[i][i];
 //         let stage_offset = i * n;
 //         let current_stage = &mut ws.stages[stage_offset..stage_offset + n];
-        
+
 //         if diag_coeff == T::zero() {
 //             current_stage.copy_from_slice(&ws.rhs_buffer);
 //         } else {
@@ -204,4 +203,3 @@ pub fn step_for_stability<T, const S: usize, const R: usize>(
 
 //     // ... Final Assembly into state.data ...
 // }
-

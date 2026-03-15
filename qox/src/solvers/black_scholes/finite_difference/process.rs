@@ -1,10 +1,12 @@
-use crate::{solvers::black_scholes::finite_difference::tridiagonal_operator::{TridiagonalOperator}, traits::{fdm_mesher::Mesher1d, fdm_process::FdmProcess, linear_operator::LinearOperator, real::Real, transform::{self, Transform}}};
+use crate::solvers::black_scholes::finite_difference::tridiagonal_operator::TridiagonalOperator;
+use crate::traits::{
+    fdm_mesher::Mesher1d, fdm_process::FdmProcess, real::Real, transform::Transform,
+};
 
-pub struct BlackScholesProcess<T: Real, Tr: Transform<T>>
-{
+pub struct BlackScholesProcess<T: Real, Tr: Transform<T>> {
     pub r: T,
     pub sigma: T,
-    pub transform: Tr
+    pub transform: Tr,
 }
 
 impl<T, M, Tr> FdmProcess<T, TridiagonalOperator<T>, M, Tr> for BlackScholesProcess<T, Tr>
@@ -27,14 +29,14 @@ where
             let xi = centers[i];
             let hm = h_minus[i];
             let hp = h_plus[i];
-            
+
             let j = self.transform.jacobian(xi);
             let h = self.transform.hessian(xi);
             let (a, b, c) = self.stencil(xi, j, h);
 
             // Weights for non-uniform finite differences
             let denom = hm * hp * (hm + hp);
-            
+
             // Second derivative term
             let a_lower = (T::from_f64(2.0) * hp) / denom;
             let a_diag = (T::from_f64(-2.0) * (hm + hp)) / denom;
@@ -46,9 +48,8 @@ where
             let b_upper = (hm * hm) / denom;
 
             lower[i] = a * a_lower + b * b_lower;
-            diag[i]  = a * a_diag + b * b_diag + c;
+            diag[i] = a * a_diag + b * b_diag + c;
             upper[i] = a * a_upper + b * b_upper;
-
         }
 
         // Boundary conditions
@@ -59,16 +60,13 @@ where
 
         TridiagonalOperator::<T>::new(lower, diag, upper)
     }
-    
+
     fn transform(&self) -> Tr {
         self.transform
     }
-
-
 }
 
 impl<T: Real, Tr: Transform<T>> BlackScholesProcess<T, Tr> {
-
     pub fn new(rate: T, vol: T, transform: Tr) -> Self {
         Self {
             r: rate,
@@ -77,8 +75,7 @@ impl<T: Real, Tr: Transform<T>> BlackScholesProcess<T, Tr> {
         }
     }
 
-    fn stencil(&self, xi: T, j: T, h: T) -> (T, T, T) 
-    {
+    fn stencil(&self, xi: T, j: T, h: T) -> (T, T, T) {
         let s = self.transform.to_physical(xi);
         let s_sig = s * self.sigma;
         let s2_sig2 = s_sig * s_sig;
@@ -86,12 +83,11 @@ impl<T: Real, Tr: Transform<T>> BlackScholesProcess<T, Tr> {
 
         let j2 = j * j;
         let a = s2_sig2 / (two * j2);
-        
+
         let b = (self.r * s / j) - (s2_sig2 * h) / (two * j2 * j);
-        
+
         let c = -self.r;
 
         (a, b, c)
     }
-
 }

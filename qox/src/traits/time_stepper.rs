@@ -1,4 +1,7 @@
-use crate::{solvers::time_stepping::glm::{GlmState, GlmTableau, GlmWorkspace}, traits::{linear_operator::LinearOperator, real::Real}};
+use crate::{
+    solvers::time_stepping::glm::{GlmState, GlmTableau, GlmWorkspace},
+    traits::real::Real,
+};
 
 pub trait TimeStepper<T: Real, const S: usize, const R: usize> {
     fn tableau(&self) -> &GlmTableau<T, S, R>;
@@ -13,10 +16,5 @@ pub trait TimeStepper<T: Real, const S: usize, const R: usize> {
         rhs_out: &mut [T],
     );
 
-    fn finalize_step(
-        &self,
-        state: &mut GlmState<T>,
-        ws: &GlmWorkspace<T>,
-        dt: T,
-    );
+    fn finalize_step(&self, state: &mut GlmState<T>, ws: &GlmWorkspace<T>, dt: T);
 }

@@ -1,17 +1,17 @@
-use std::ops::{Add, Sub, Mul, Div, Neg};
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
 use crate::traits::real::Real;
 
 //#[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct Dual {
-    pub val: f64, // The value: f(x)
+    pub val: f64,  // The value: f(x)
     pub grad: f64, // The derivative: f'(x)
 }
 
 impl Dual {
-
     #[inline]
+    #[allow(dead_code)]
     fn val(&self) -> f64 {
         self.val
     }
@@ -34,7 +34,6 @@ impl Dual {
 }
 
 impl Real for Dual {
-
     #[inline]
     fn from_f64(v: f64) -> Self {
         Dual::constant(v)

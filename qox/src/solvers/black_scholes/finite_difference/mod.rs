@@ -5,3 +5,4 @@ pub mod operator_old;
 pub mod process;
 pub mod transforms;
 pub mod tridiagonal_operator;
+pub mod constraints;

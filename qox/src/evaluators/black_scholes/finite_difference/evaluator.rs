@@ -1,15 +1,15 @@
+use crate::market::market_frame::OptionMarketFrame;
 use crate::solvers::black_scholes::finite_difference::meshing::uniform::UniformMesher1d;
 use crate::solvers::black_scholes::finite_difference::process::BlackScholesProcess;
-use crate::solvers::black_scholes::finite_difference::solver_old::{Solver};
 use crate::solvers::black_scholes::finite_difference::solver_old::FdmConfig;
+use crate::solvers::black_scholes::finite_difference::solver_old::Solver;
 use crate::solvers::black_scholes::finite_difference::transforms::log::LogTransform;
-use crate::solvers::time_stepping::crank_nicolson::{CrankNicolson};
-use crate::solvers::time_stepping::dimsim2::{Dimsim2};
-//use crate::solvers::time_stepping::dimsim2::{self, Dimsim2};
-use crate::solvers::time_stepping::sdirk22::{Sdirk22};
+use crate::solvers::time_stepping::dimsim2::Dimsim2;
 use crate::traits::payoff::{Payoff, PayoffAsInitialConditions};
-use crate::{market::market_frame::OptionMarketFrame};
-use crate::traits::{instrument::OptionInstrument, pricing_engine::OptionEvaluable, rate_curve::RateCurve, real::Real, vol_surface::VolSurface};
+use crate::traits::{
+    instrument::OptionInstrument, pricing_engine::OptionEvaluable, rate_curve::RateCurve,
+    real::Real, vol_surface::VolSurface,
+};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Evaluator {
@@ -25,7 +25,6 @@ where
     P: Payoff<T> + Copy,
 {
     fn evaluate(self, instrument: I, market: OptionMarketFrame<T, RC, VS>) -> T {
-
         let solver = Solver {
             config: FdmConfig {
                 nodes: self.config.nodes,
@@ -42,17 +41,11 @@ where
         let transform = LogTransform::new();
         let s_min = T::from_f64(0.01);
         let s_max = market.spot_price * T::from_f64(5.0);
-        let mesher 
-            = UniformMesher1d::new(
-                s_min,
-                s_max,
-                solver.config.nodes, 
-                transform);
-        let process = BlackScholesProcess
-        {
+        let _mesher = UniformMesher1d::new(s_min, s_max, solver.config.nodes, transform);
+        let _process = BlackScholesProcess {
             r: rate,
             sigma: vol,
-            transform
+            transform,
         };
         solver.solve(
             stepper,
@@ -63,5 +56,4 @@ where
             vol,
         )
     }
-
 }

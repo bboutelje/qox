@@ -1,8 +1,9 @@
-use crate::traits::{market_view::OptionMarketView, payoff::{InitialConditions, Payoff}, rate_curve::RateCurve, real::Real, vol_surface::VolSurface};
+use crate::traits::{
+    market_view::OptionMarketView, payoff::Payoff, rate_curve::RateCurve, real::Real,
+    vol_surface::VolSurface,
+};
 
-pub trait Instrument {
-
-}
+pub trait Instrument {}
 
 #[derive(Debug, Clone, Copy)]
 pub enum OptionType {
@@ -16,12 +17,12 @@ pub trait OptionInstrument<T: Real, P: Payoff<T> + Copy>: Instrument {
     fn years_to_expiry(self) -> T;
 
     fn get_payoff(self) -> P;
-    
-    fn evaluate<M, RC, VS>(self, market_frame: &M) -> T 
-        where
-            M: OptionMarketView<T, RC, VS>,
-            RC: RateCurve<T>,
-            VS: VolSurface<T>;
+
+    fn evaluate<M, RC, VS>(self, market_frame: &M) -> T
+    where
+        M: OptionMarketView<T, RC, VS>,
+        RC: RateCurve<T>,
+        VS: VolSurface<T>;
 }
 
 pub trait FutureInstrument<T: Real>: Instrument {

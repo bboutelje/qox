@@ -4,18 +4,19 @@ use chrono::{Duration, Utc};
 use qox::evaluators::black_scholes::finite_difference::evaluator::Evaluator;
 
 use qox::instruments::stock_option::StockOption;
+use qox::market::{
+    market_frame::OptionMarketFrame, rate_curve::ContinuousRateCurve, vol_surface::FlatVolSurface,
+};
 use qox::solvers::black_scholes::finite_difference::solver_old::FdmConfig;
 use qox::traits::instrument::OptionType;
-use qox::traits::real::Real;
-use qox::{market::{market_frame::OptionMarketFrame, rate_curve::ContinuousRateCurve, vol_surface::FlatVolSurface}};
 use qox::traits::pricing_engine::OptionEvaluable;
+use qox::traits::real::Real;
 
 pub fn main() {
-
     // let vol = NumDualVec::<2>::var(0.2, 0);
     // let rate = NumDualVec::<2>::var(0.05, 1);
 
-    // let vol = DualArray::<2>::var(0.2, 0); 
+    // let vol = DualArray::<2>::var(0.2, 0);
     // let rate = DualArray::<2>::var(0.05, 1);
 
     // let vol = Dual::var(0.2);
@@ -23,7 +24,7 @@ pub fn main() {
     let spot = 95.0;
     let vol = 0.2;
     let rate = 0.05;
-    
+
     let market = OptionMarketFrame::new(
         spot,
         ContinuousRateCurve::new(rate),
@@ -34,18 +35,14 @@ pub fn main() {
         config: FdmConfig {
             nodes: 1000,
             time_steps: 10,
-        }
+        },
     };
 
-    let option = StockOption::new(
-        100.0,
-        Utc::now() + Duration::days(365),
-        OptionType::Call,
-    );
+    let option = StockOption::new(100.0, Utc::now() + Duration::days(365), OptionType::Call);
 
     let start = Instant::now();
 
-    let mut result_price = evaluator.evaluate(option, market);
+    let result_price = evaluator.evaluate(option, market);
     let n = 1;
 
     // for _ in 0..n {

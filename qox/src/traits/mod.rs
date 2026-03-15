@@ -1,25 +1,24 @@
-use crate::real::{dual::Dual, dual_array::DualArray, num_dual_vec::NumDualVec};
-
-pub mod calendar;
-pub mod instrument;
-pub mod pricing_engine;
-pub mod real;
-pub mod rate_curve;
 pub mod boundary;
+pub mod calendar;
+pub mod constraint;
 pub mod fdm_mesher;
-pub mod vol_surface;
-pub mod payoff;
-pub mod time_stepper;
+pub mod fdm_process;
+pub mod instrument;
 pub mod linear_operator;
 pub mod market_view;
+pub mod payoff;
+pub mod pricing_engine;
+pub mod rate_curve;
+pub mod real;
+pub mod time_stepper;
 pub mod transform;
-pub mod fdm_process;
+pub mod vol_surface;
 
 // pub trait EvaluationResolver<RC, VS> {
 //     type Output;
 // }
 
-// pub type Resolved<SReal, RCReal, VSReal> = 
+// pub type Resolved<SReal, RCReal, VSReal> =
 //     <SReal as EvaluationResolver<RCReal, VSReal>>::Output;
 
 // macro_rules! impl_eval_resolver_simple {
@@ -67,13 +66,11 @@ pub mod fdm_process;
 // impl_eval_resolver!(const N, DualArray);
 // impl_eval_resolver!(const N, NumDualVec);
 
-
-
 // pub trait EvaluationResult<RC, VS>: EvaluationResolver<RC, VS> {
 //     type Out;
 // }
 
-// impl<S, RC, VS> EvaluationResult<RC, VS> for S 
+// impl<S, RC, VS> EvaluationResult<RC, VS> for S
 // where S: EvaluationResolver<RC, VS> {
 //     type Out = <S as EvaluationResolver<RC, VS>>::Output;
 // }

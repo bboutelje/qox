@@ -1,6 +1,9 @@
 use nalgebra::Complex;
 
-use crate::{solvers::time_stepping::glm::{GlmState, GlmTableau, GlmWorkspace}, traits::{real::Real, time_stepper::TimeStepper}};
+use crate::{
+    solvers::time_stepping::glm::{GlmState, GlmTableau, GlmWorkspace},
+    traits::{real::Real, time_stepper::TimeStepper},
+};
 
 pub struct CrankNicolson<T: Real> {
     tableau: GlmTableau<T, 1, 2>,
@@ -23,8 +26,7 @@ impl<T: Real> CrankNicolson<T> {
                 // Row 1: f(y_{n+1}) = 0*y_n + 0*f(y_n) + 1.0*f(Y1)
                 b: [[half], [one]],
                 // V: Transfers history [y_n, f(y_n)]
-                v: [[one, half],
-                    [zero, zero]],
+                v: [[one, half], [zero, zero]],
                 // C: Time offset is 1.0 (end of step)
                 c: [one],
             },
@@ -33,7 +35,9 @@ impl<T: Real> CrankNicolson<T> {
 }
 
 impl<T: Real> TimeStepper<T, 1, 2> for CrankNicolson<T> {
-    fn tableau(&self) -> &GlmTableau<T, 1, 2> { &self.tableau }
+    fn tableau(&self) -> &GlmTableau<T, 1, 2> {
+        &self.tableau
+    }
 
     fn prepare_stage_rhs(
         &self,
@@ -47,7 +51,7 @@ impl<T: Real> TimeStepper<T, 1, 2> for CrankNicolson<T> {
         let n = state.n;
         // items[0..n] is y_n, items[n..2n] is f(y_n)
         let y_n = &state.items[0..n];
-        let f_n = &state.items[n..2*n];
+        let f_n = &state.items[n..2 * n];
 
         let u11 = self.tableau.u[0][0]; // 1.0
         let u12 = self.tableau.u[0][1]; // 0.5
@@ -61,11 +65,11 @@ impl<T: Real> TimeStepper<T, 1, 2> for CrankNicolson<T> {
     fn finalize_step(&self, state: &mut GlmState<T>, ws: &GlmWorkspace<T>, dt: T) {
         let n = state.n;
         let l_y1 = &ws.l_stages[0..n]; // f(Y1)
-        
+
         // V coefficients
         let v11 = self.tableau.v[0][0]; // 1.0
         let v12 = self.tableau.v[0][1]; // 0.5
-        
+
         // B coefficients
         let b11 = self.tableau.b[0][0]; // 0.5
         let b21 = self.tableau.b[1][0]; // 1.0
@@ -78,19 +82,18 @@ impl<T: Real> TimeStepper<T, 1, 2> for CrankNicolson<T> {
 
             // y_{n+1} = v11*y_n + dt*v12*f_n + dt*b11*f(Y1)
             y_hist[i] = v11 * y_old + dt * (v12 * f_old + b11 * l_y1[i]);
-            
+
             // f_{n+1} = b21 * f(Y1) (since v21 and v22 are zero)
             f_hist[i] = b21 * l_y1[i];
         }
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
     // Note: Ensure GlmState and GlmWorkspace are accessible or imported
-    
+
     fn exact_solution(t: f64) -> f64 {
         (-t).exp()
     }
@@ -102,7 +105,7 @@ mod tests {
     #[test]
     fn crank_nicolson_convergence_order() {
         let method = CrankNicolson::<f64>::new();
-        
+
         let t_final = 1.0;
         let exact = exact_solution(t_final);
 
@@ -115,11 +118,11 @@ mod tests {
             // 1. Fix GlmState::new: Needs (r, n, current_time)
             // r=2 (from Dimsim2<T, 2, 2>), n=1 (scalar problem), t=0.0
             let mut state = GlmState::<f64>::new(2, 1, 0.0);
-            
+
             // Initial conditions
             let y0 = 1.0;
-            state.items[0] = y0;      // y_n
-            state.items[1] = f(y0);   // f(y_n) (The second history item for DIMSIM2)
+            state.items[0] = y0; // y_n
+            state.items[1] = f(y0); // f(y_n) (The second history item for DIMSIM2)
 
             // 2. Fix GlmWorkspace::new: Needs (s, n)
             // s=2 (stages), n=1 (nodes)
@@ -133,8 +136,8 @@ mod tests {
                     &mut state,
                     &mut ws,
                     dt,
-                    |y: &[f64], out: &mut [f64]| { 
-                        out[0] = -y[0]; 
+                    |y: &[f64], out: &mut [f64]| {
+                        out[0] = -y[0];
                     },
                 );
             }
@@ -156,6 +159,7 @@ mod tests {
 
 use crate::real::complex::ComplexWrapper; // Ensure this is imported
 
+#[allow(dead_code)]
 fn stability_function(method: &CrankNicolson<ComplexWrapper>, z: ComplexWrapper) -> ComplexWrapper {
     // Dimsim2 uses R=2, N=1
     let mut state = GlmState::<ComplexWrapper>::new(2, 1, ComplexWrapper(Complex::new(0.0, 0.0)));
@@ -169,11 +173,7 @@ fn stability_function(method: &CrankNicolson<ComplexWrapper>, z: ComplexWrapper)
     let dt = ComplexWrapper(Complex::new(1.0, 0.0));
 
     crate::solvers::time_stepping::glm::step_for_stability(
-        method,
-        &mut state,
-        &mut ws,
-        dt,
-        z, // pass the stability parameter
+        method, &mut state, &mut ws, dt, z, // pass the stability parameter
     );
 
     // The stability function returns the new y_n
