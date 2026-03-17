@@ -1,6 +1,9 @@
-use crate::traits::{
-    market_view::OptionMarketView, payoff::Payoff, rate_curve::RateCurve, real::Real,
-    vol_surface::VolSurface,
+use crate::{
+    traits::{
+        market_view::OptionMarketView, payoff::Payoff, rate_curve::RateCurve,
+        vol_surface::VolSurface,
+    },
+    types::Real,
 };
 
 pub trait Instrument {}

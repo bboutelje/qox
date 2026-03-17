@@ -1,3 +1,12 @@
+pub mod complex;
+pub mod dual;
+pub mod dual2_vec;
+pub mod dual_array;
+pub mod f64;
+pub mod hyper_dual;
+pub mod num_dual_vec;
+pub mod reverse_node;
+
 use std::fmt::Debug;
 use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub, SubAssign};
 

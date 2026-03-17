@@ -1,7 +1,6 @@
-use crate::traits::real::Real;
+use crate::types::Real;
 
-pub trait Payoff<T: Real> 
-{
+pub trait Payoff<T: Real> {
     fn calculate(&self, spot: T) -> T;
 }
 
@@ -10,8 +9,7 @@ pub trait InitialConditions<T> {
 }
 
 #[derive(Copy, Clone)]
-pub struct PayoffAsInitialConditions<T: Real, P: Payoff<T>>
-{
+pub struct PayoffAsInitialConditions<T: Real, P: Payoff<T>> {
     pub payoff: P,
     _marker: std::marker::PhantomData<T>,
 }

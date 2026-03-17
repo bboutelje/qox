@@ -1,17 +1,12 @@
 pub mod boundary;
 pub mod calendar;
-pub mod constraint;
-pub mod fdm_mesher;
 pub mod fdm_process;
 pub mod instrument;
-pub mod linear_operator;
 pub mod market_view;
 pub mod payoff;
 pub mod pricing_engine;
 pub mod rate_curve;
-pub mod real;
 pub mod solver_strategy;
-pub mod time_stepper;
 pub mod transform;
 pub mod vol_surface;
 

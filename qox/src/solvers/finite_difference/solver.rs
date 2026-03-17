@@ -1,77 +1,59 @@
-//use std::time::Instant;
-
-use crate::solvers::time_stepping::glm::GlmState;
-use crate::traits::linear_operator::LinearOperator;
-use crate::traits::time_stepper::TimeStepper;
 use crate::{
+    processes::FdmProcess,
     solvers::{
-        black_scholes::finite_difference::{
-            meshing::{log::LogMesher1d, uniform_old::UniformMesher1d},
-            operator_old::BsOperator,
+        finite_difference::{meshers::Mesher1d, solver_old::FdmConfig},
+        linear_operators::LinearOperator,
+        time_stepping::{
+            TimeStepper,
+            glm::{GlmState, GlmWorkspace},
         },
-        time_stepping::glm::GlmWorkspace,
     },
-    traits::{fdm_mesher::Mesher1d, payoff::InitialConditions, real::Real},
+    traits::{payoff::InitialConditions, solver_strategy::SolverStrategy, transform::Transform},
+    types::Real,
 };
 
 pub struct Solver {
     pub config: FdmConfig,
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct FdmConfig {
-    pub nodes: usize,
-    pub time_steps: usize,
-}
-
 impl Solver {
-    pub fn solve<IC, T, Step, const S: usize, const R: usize>(
-        self,
+    pub fn solve<T, Tr, L, M, P, Step, IC, Strategy, const S: usize, const R: usize>(
+        &self,
+        process: P,
         stepper: Step,
-        initial_condition: IC,
-        years_to_expiry: T,
+        initial_conditions: IC,
+        mesher: M,
+        dt: T,
+        config: FdmConfig,
         spot: T,
-        rate: T,
-        vol: T,
+        strategy: Strategy,
     ) -> T
     where
         T: Real,
-        IC: InitialConditions<T> + Copy,
+        Tr: Transform<T> + Copy,
+        M: Mesher1d<T>,
         Step: TimeStepper<T, S, R>,
+        P: FdmProcess<T, L, M, Tr>,
+        L: LinearOperator<T, M>,
+        IC: InitialConditions<T> + Copy,
+        Strategy: SolverStrategy<T, M, L>,
     {
-        let zero = T::zero();
+        let operator = process.build_operator(&mesher);
 
-        let s_min = T::from_f64(0.01);
-        let s_max = spot * T::from_f64(5.0);
+        let mut state = GlmState::<T>::new(R, config.nodes, T::zero());
+        let mut workspace = GlmWorkspace::<T>::new(S, config.nodes);
 
-        let mesher = LogMesher1d::new(UniformMesher1d::new(
-            s_min.ln(),
-            s_max.ln(),
-            self.config.nodes,
-        ));
-        let dt = years_to_expiry / T::from_f64(self.config.time_steps as f64);
+        let initial_v = self.initialize_payoff(initial_conditions, &mesher);
 
-        let operator = BsOperator {
-            mesher: &mesher,
-            r: rate.into(),
-            sigma: vol.into(),
-            cache: std::cell::RefCell::new(None),
-        };
-
-        let mut state = GlmState::<T>::new(R, self.config.nodes, zero);
-        let mut workspace = GlmWorkspace::<T>::new(S, self.config.nodes);
-
-        let initial_v = self.initialize_payoff(initial_condition, &mesher);
         state.step_slice_mut(0).copy_from_slice(&initial_v);
 
+        let n = self.config.nodes;
         if R > 1 {
-            let n = self.config.nodes;
             let (y_slice, f_slice) = state.items.split_at_mut(n);
-            operator.apply_into(y_slice, zero, f_slice);
+            operator.apply_into(y_slice, T::zero(), f_slice);
         }
 
-        let n = self.config.nodes;
-        for _ in 0..self.config.time_steps {
+        for _ in 0..config.time_steps {
             let next_t = state.current_time + dt;
 
             for i in 0..S {
@@ -89,10 +71,12 @@ impl Solver {
 
                 let stage_slice = &mut workspace.stages[i * n..(i + 1) * n];
 
-                operator.solve_inverse_into(
+                strategy.solve_stage(
+                    &operator,
                     &workspace.rhs_buffer,
                     stage_coeff,
                     next_t,
+                    &mesher,
                     stage_slice,
                     &mut workspace.z_buffer,
                 );
@@ -103,13 +87,16 @@ impl Solver {
 
             stepper.finalize_step(&mut state, &workspace, dt);
             state.current_time = next_t;
+
+            // if R > 1 {
+            //     let (y_slice, f_slice) = state.items.split_at_mut(n);
+            //     operator.apply_into(y_slice, next_t, f_slice);
+            // }
         }
 
-        self.interpolate(&mesher, state.step_slice(0), spot.into())
+        self.interpolate(&mesher, state.step_slice(0), spot)
     }
-}
 
-impl Solver {
     fn initialize_payoff<T, IC, M>(&self, initial_condition: IC, mesher: &M) -> Vec<T>
     where
         T: Real,

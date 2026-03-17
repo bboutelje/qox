@@ -1,4 +1,4 @@
-use crate::traits::{real::Real, transform::Transform};
+use crate::{traits::transform::Transform, types::Real};
 
 #[derive(Copy, Clone)]
 pub struct LogTransform<T: Real> {
@@ -7,7 +7,9 @@ pub struct LogTransform<T: Real> {
 
 impl<T: Real> LogTransform<T> {
     pub fn new() -> Self {
-        Self { _marker: std::marker::PhantomData }
+        Self {
+            _marker: std::marker::PhantomData,
+        }
     }
 }
 

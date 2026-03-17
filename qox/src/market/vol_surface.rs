@@ -1,7 +1,16 @@
 use chrono::NaiveDate;
 
-use crate::{core::{error::CurveError, period::{DayCountConvention, PeriodCalculator}, tenor::Tenor}, math::interpolate::LinearInterpolator, traits::{real::Real, vol_surface::VolSurface}};
-use crate::math::interpolate::{Interpolator1D};
+use crate::math::interpolate::Interpolator1D;
+use crate::types::Real;
+use crate::{
+    core::{
+        error::CurveError,
+        period::{DayCountConvention, PeriodCalculator},
+        tenor::Tenor,
+    },
+    math::interpolate::LinearInterpolator,
+    traits::vol_surface::VolSurface,
+};
 
 #[derive(Debug, Clone, Copy)]
 pub struct FlatVolSurface<T> {
@@ -10,14 +19,11 @@ pub struct FlatVolSurface<T> {
 
 impl<T> FlatVolSurface<T> {
     pub fn new(vol: T) -> Self {
-        Self {
-            vol: vol
-        }
+        Self { vol: vol }
     }
 }
 
-impl<T: Real> VolSurface<T> for FlatVolSurface<T>
-{
+impl<T: Real> VolSurface<T> for FlatVolSurface<T> {
     fn volatility(&self, _strike: f64, _t: T) -> T {
         self.vol.clone()
     }
@@ -49,13 +55,9 @@ impl<T: Real> InterpolatedVolSurface<T> {
             .map(|tenor| {
                 let end_date = tenor.advance(reference_date);
                 let yf = calculator
-                    .year_fraction(
-                        reference_date, 
-                        end_date, 
-                        DayCountConvention::Actual365Fixed
-                    )
+                    .year_fraction(reference_date, end_date, DayCountConvention::Actual365Fixed)
                     .0;
-                
+
                 // Lift the f64 result into the generic type T
                 T::from_f64(yf)
             })

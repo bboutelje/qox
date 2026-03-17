@@ -1,9 +1,11 @@
-use nalgebra::Complex;
-
 use crate::{
-    solvers::time_stepping::glm::{GlmState, GlmTableau, GlmWorkspace},
-    traits::{real::Real, time_stepper::TimeStepper},
+    solvers::time_stepping::{
+        TimeStepper,
+        glm::{GlmState, GlmTableau, GlmWorkspace},
+    },
+    types::{Real, complex::ComplexWrapper},
 };
+use nalgebra::Complex;
 
 pub struct CrankNicolson<T: Real> {
     tableau: GlmTableau<T, 1, 2>,
@@ -64,6 +66,7 @@ impl<T: Real> TimeStepper<T, 1, 2> for CrankNicolson<T> {
 
     fn finalize_step(&self, state: &mut GlmState<T>, ws: &GlmWorkspace<T>, dt: T) {
         let n = state.n;
+
         let l_y1 = &ws.l_stages[0..n]; // f(Y1)
 
         // V coefficients
@@ -156,8 +159,6 @@ mod tests {
         }
     }
 }
-
-use crate::real::complex::ComplexWrapper; // Ensure this is imported
 
 #[allow(dead_code)]
 fn stability_function(method: &CrankNicolson<ComplexWrapper>, z: ComplexWrapper) -> ComplexWrapper {

@@ -1,5 +1,6 @@
-use crate::traits::real::Real;
-use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub, SubAssign}; // Adjust path to your Real trait
+use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub, SubAssign};
+
+use crate::types::Real; // Adjust path to your Real trait
 
 //#[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]

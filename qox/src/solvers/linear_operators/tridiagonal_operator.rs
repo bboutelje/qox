@@ -1,5 +1,9 @@
-use crate::traits::{
-    constraint::Constraint, fdm_mesher::Mesher1d, linear_operator::LinearOperator, real::Real,
+use crate::{
+    solvers::{
+        finite_difference::{constraints::Constraint, meshers::Mesher1d},
+        linear_operators::LinearOperator,
+    },
+    types::Real,
 };
 use std::{cell::RefCell, marker::PhantomData};
 
@@ -163,7 +167,6 @@ where
             for i in 0..n {
                 let old_xi = x[i];
 
-                // Sum of off-diagonals
                 let mut sum = b[i];
                 if i > 0 {
                     sum -= (-coeff * self.lower[i]) * x[i - 1]; // Use updated value x[i-1]
@@ -184,6 +187,68 @@ where
                 x[i] = x_relaxed.max(constraint.lower_bound(i, mesher));
 
                 max_diff = max_diff.max((x[i] - old_xi).abs());
+            }
+
+            if max_diff < tolerance {
+                break;
+            }
+        }
+    }
+
+    fn solve_ikonen_toivanen_into<C>(
+        &self,
+        b: &[T],
+        coeff: T,
+        constraint: &C,
+        mesher: &M,
+        x: &mut [T],
+        z_buffer: &mut [T],
+    ) where
+        C: Constraint<T, M>,
+    {
+        let n = self.size();
+        let tolerance = T::from_f64(1e-8);
+        let max_iter = 100;
+
+        // Ensure the cache is ready for the implicit operator (I - coeff * L)
+        self.setup_coeff(coeff);
+
+        // lambda tracks the Lagrange multipliers for the constraint
+        let mut lambda = vec![T::zero(); n];
+        let mut rhs_hat = vec![T::zero(); n];
+
+        for _ in 0..max_iter {
+            let mut max_diff = T::zero();
+
+            // 1. Prepare modified RHS: b_hat = b + lambda
+            for i in 0..n {
+                rhs_hat[i] = b[i] + lambda[i];
+            }
+
+            // 2. Solve the tridiagonal system: (I - coeff * L) x_new = rhs_hat
+            // We use the existing solve_inverse_into logic
+            self.solve_inverse_into(&rhs_hat, coeff, T::zero(), x, z_buffer);
+
+            // 3. Update lambda and enforce constraint
+            for i in 0..n {
+                let old_xi = x[i];
+                let g_i = constraint.lower_bound(i, mesher);
+
+                // Ikonen-Toivanen update:
+                // x_new = max(g_i, x_calc - lambda_old)
+                // lambda_new = max(0, lambda_old + g_i - x_calc)
+
+                let val_minus_lambda = x[i] - lambda[i];
+                x[i] = val_minus_lambda.max(g_i);
+
+                let new_lambda = (lambda[i] + g_i - old_xi).max(T::zero());
+
+                let diff = (new_lambda - lambda[i]).abs();
+                if diff > max_diff {
+                    max_diff = diff;
+                }
+
+                lambda[i] = new_lambda;
             }
 
             if max_diff < tolerance {

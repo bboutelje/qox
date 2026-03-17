@@ -1,4 +1,10 @@
-use crate::traits::{fdm_mesher::Mesher1d, linear_operator::LinearOperator, real::Real};
+use crate::{
+    solvers::{
+        finite_difference::{constraints::Constraint, meshers::Mesher1d},
+        linear_operators::LinearOperator,
+    },
+    types::Real,
+};
 
 pub struct BsOperatorCache<T> {
     pub coeff: T,
@@ -116,8 +122,22 @@ where
         _x: &mut [T],
         _z_buffer: &mut [T],
     ) where
-        C: crate::traits::constraint::Constraint<T, M>,
+        C: Constraint<T, M>,
         M: Mesher1d<T>,
+    {
+        todo!()
+    }
+
+    fn solve_ikonen_toivanen_into<C>(
+        &self,
+        _b: &[T],
+        _coeff: T,
+        _constraint: &C,
+        _mesher: &M,
+        _x: &mut [T],
+        _z_buffer: &mut [T],
+    ) where
+        C: Constraint<T, M>,
     {
         todo!()
     }

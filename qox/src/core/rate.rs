@@ -1,4 +1,4 @@
-use crate::{core::period::DayCountConvention, traits::real::Real};
+use crate::{core::period::DayCountConvention, types::Real};
 
 #[derive(Debug, Clone, Copy)]
 pub enum Compounding {
@@ -21,7 +21,6 @@ pub enum Frequency {
 pub trait Discountable<T: Real> {
     fn discount_factor(&self, t: T) -> T;
 }
-
 
 #[derive(Debug, Clone, Copy)]
 pub struct InterestRate<'a, T> {
@@ -47,8 +46,7 @@ impl<'a, T> InterestRate<'a, T> {
     }
 }
 
-impl<'a, T: Real> Discountable<T> for InterestRate<'a, T> 
-{
+impl<'a, T: Real> Discountable<T> for InterestRate<'a, T> {
     fn discount_factor(&self, t: T) -> T {
         let one = T::one();
         let r = self.value;
@@ -87,7 +85,6 @@ impl<'a, T: Real> Discountable<T> for InterestRate<'a, T>
 }
 
 // Small helper to avoid syntax clutter for (r * t)
-
 
 impl<'a> InterestRate<'a, f64> {
     pub fn implied_rate(
@@ -146,8 +143,8 @@ impl<'a> InterestRate<'a, f64> {
 
 //     /// Calculates the continuously compounded rate from a discount factor
 //     pub fn from_discount_factor(
-//         df: f64, 
-//         t: f64, 
+//         df: f64,
+//         t: f64,
 //         convention: DayCountConvention<'a>
 //     ) -> Self {
 //         let value = -df.ln() / t;

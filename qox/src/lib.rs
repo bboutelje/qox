@@ -1,16 +1,16 @@
-pub mod instruments;
-pub mod evaluators;
-pub mod real;
-pub mod market;
-pub mod traits;
 pub mod core;
+pub mod evaluators;
+pub mod instruments;
+pub mod market;
 pub mod math;
-pub mod solvers_old;
+pub mod processes;
 pub mod solvers;
+pub mod solvers_old;
+pub mod traits;
+pub mod types;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Days(pub i64);
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Years(pub f64);
-

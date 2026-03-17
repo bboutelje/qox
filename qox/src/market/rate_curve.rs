@@ -1,13 +1,13 @@
-use chrono::NaiveDate;
 use crate::core::error::CurveError;
 use crate::core::period::{DayCountConvention, PeriodCalculator};
+use crate::core::rate::Discountable;
+use crate::core::rate::{Compounding, Frequency, InterestRate};
 use crate::core::tenor::Tenor;
+use crate::math::interpolate::Interpolator1D;
 use crate::math::interpolate::LinearInterpolator;
 use crate::traits::rate_curve::RateCurve;
-use crate::traits::real::Real;
-use crate::core::rate::{Compounding, Frequency, InterestRate};
-use crate::core::rate::Discountable;
-use crate::math::interpolate::Interpolator1D;
+use crate::types::Real;
+use chrono::NaiveDate;
 
 #[derive(Debug, Clone)]
 pub struct FlatRateCurve<'a, T: Real> {
@@ -20,8 +20,7 @@ impl<'a, T: Real> FlatRateCurve<'a, T> {
     }
 }
 
-impl<'a, T: Real> RateCurve<T> for FlatRateCurve<'a, T>
-{
+impl<'a, T: Real> RateCurve<T> for FlatRateCurve<'a, T> {
     fn zero_rate(&self, _t: T) -> T {
         self.rate.value
     }
@@ -31,15 +30,14 @@ impl<'a, T: Real> RateCurve<T> for FlatRateCurve<'a, T>
     }
 }
 
-impl<'a, T: Real> RateCurve<T> for InterpolatedRateCurve<'a, T> 
-{
+impl<'a, T: Real> RateCurve<T> for InterpolatedRateCurve<'a, T> {
     fn zero_rate(&self, t: T) -> T {
         self.interpolator.interpolate(t)
     }
 
     fn discount_factor(&self, t: T) -> T {
         let r = self.zero_rate(t);
-        
+
         // 2. Wrap the interpolated rate in an InterestRate object
         let rate = InterestRate {
             value: r,
@@ -47,7 +45,7 @@ impl<'a, T: Real> RateCurve<T> for InterpolatedRateCurve<'a, T>
             compounding: self.rates[0].compounding,
             frequency: self.rates[0].frequency,
         };
-        
+
         // 3. Return the calculated discount factor
         rate.discount_factor(t)
     }
@@ -79,8 +77,10 @@ impl<'a, T: Real> InterpolatedRateCurve<'a, T> {
             .zip(rates.iter())
             .map(|(tenor, rate)| {
                 let end_date = tenor.advance(reference_date);
-                let yf = calculator.year_fraction(reference_date, end_date, rate.convention).0;
-                
+                let yf = calculator
+                    .year_fraction(reference_date, end_date, rate.convention)
+                    .0;
+
                 // Lift the f64 into the generic type T
                 T::from_f64(yf)
             })
@@ -89,11 +89,14 @@ impl<'a, T: Real> InterpolatedRateCurve<'a, T> {
         let rate_values: Vec<T> = rates.iter().map(|r| r.value.clone()).collect();
         let interpolator = LinearInterpolator::new(year_fractions, rate_values)?;
 
-        Ok(Self { reference_date, tenors, rates, interpolator })
+        Ok(Self {
+            reference_date,
+            tenors,
+            rates,
+            interpolator,
+        })
     }
 }
-
-
 
 #[derive(Debug, Clone, Copy)]
 pub struct ContinuousRateCurve<'a, T: Real> {
@@ -109,14 +112,13 @@ impl<'a, T: Real> ContinuousRateCurve<'a, T> {
                 value: value, // Automatically converts here
                 compounding: Compounding::Continuous,
                 frequency: Frequency::Infinite,
-                convention: DayCountConvention::Actual365Fixed, 
+                convention: DayCountConvention::Actual365Fixed,
             },
         }
     }
 }
 
-impl<'a, T: Real> RateCurve<T> for ContinuousRateCurve<'a, T>
-{
+impl<'a, T: Real> RateCurve<T> for ContinuousRateCurve<'a, T> {
     fn zero_rate(&self, _t: T) -> T {
         self.rate.value.clone()
     }

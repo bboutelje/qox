@@ -1,7 +1,5 @@
 use std::ops::{Add, Div, Mul, Neg, Sub, SubAssign};
 
-use crate::traits::real::Real;
-
 //#[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct Dual {
@@ -152,6 +150,8 @@ impl Add<Dual> for Dual {
 }
 
 use std::ops::AddAssign;
+
+use crate::types::Real;
 
 // Allows: a += b
 impl AddAssign for Dual {

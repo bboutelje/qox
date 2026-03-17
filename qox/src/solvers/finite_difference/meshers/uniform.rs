@@ -1,4 +1,6 @@
-use crate::traits::{fdm_mesher::Mesher1d, real::Real, transform::Transform};
+use crate::{
+    solvers::finite_difference::meshers::Mesher1d, traits::transform::Transform, types::Real,
+};
 
 pub struct UniformMesher1d<T: Real, Tr: Transform<T>> {
     pub transform: Tr,
@@ -7,8 +9,7 @@ pub struct UniformMesher1d<T: Real, Tr: Transform<T>> {
     pub h_minus: Vec<T>,
 }
 
-impl<T: Real, Tr: Transform<T>> UniformMesher1d<T, Tr>
-{
+impl<T: Real, Tr: Transform<T>> UniformMesher1d<T, Tr> {
     pub fn new(start: T, end: T, size: usize, transform: Tr) -> Self {
         let n_minus_1 = T::from_f64((size - 1) as f64);
         let dx = (end - start) / n_minus_1;
@@ -18,8 +19,13 @@ impl<T: Real, Tr: Transform<T>> UniformMesher1d<T, Tr>
             .collect();
 
         let (h_plus, h_minus) = Self::build_distances(&centers);
-        
-        Self { transform, centers, h_plus, h_minus }
+
+        Self {
+            transform,
+            centers,
+            h_plus,
+            h_minus,
+        }
     }
 
     fn build_distances(centers: &[T]) -> (Vec<T>, Vec<T>) {
@@ -36,10 +42,18 @@ impl<T: Real, Tr: Transform<T>> UniformMesher1d<T, Tr>
 }
 
 impl<T: Real, Tr: Transform<T>> Mesher1d<T> for UniformMesher1d<T, Tr> {
-    fn size(&self) -> usize { self.centers.len() }
-    fn centers(&self) -> &[T] { &self.centers }
-    fn h_plus(&self) -> &[T] { &self.h_plus }
-    fn h_minus(&self) -> &[T] { &self.h_minus }
+    fn size(&self) -> usize {
+        self.centers.len()
+    }
+    fn centers(&self) -> &[T] {
+        &self.centers
+    }
+    fn h_plus(&self) -> &[T] {
+        &self.h_plus
+    }
+    fn h_minus(&self) -> &[T] {
+        &self.h_minus
+    }
 
     // Restore the mapping here
     fn location(&self, index: usize) -> T {

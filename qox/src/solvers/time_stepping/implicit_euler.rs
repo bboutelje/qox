@@ -1,6 +1,9 @@
 use crate::{
-    solvers::time_stepping::glm::{GlmState, GlmWorkspace, GlmTableau}, 
-    traits::{real::Real, time_stepper::TimeStepper}
+    solvers::time_stepping::{
+        TimeStepper,
+        glm::{GlmState, GlmTableau, GlmWorkspace},
+    },
+    types::Real,
 };
 pub struct ImplicitEuler<T: Real> {
     tableau: GlmTableau<T, 1, 1>,
@@ -37,12 +40,7 @@ impl<T: Real> TimeStepper<T, 1, 1> for ImplicitEuler<T> {
         rhs_out.copy_from_slice(state.step_slice(0));
     }
 
-    fn finalize_step(
-        &self,
-        state: &mut GlmState<T>,
-        ws: &GlmWorkspace<T>,
-        _dt: T,
-    ) {
+    fn finalize_step(&self, state: &mut GlmState<T>, ws: &GlmWorkspace<T>, _dt: T) {
         // Move the computed stage 0 from workspace back to state items
         // We use the first N elements of ws.stages (which represents stage 0)
         let n = state.n;

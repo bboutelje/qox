@@ -1,12 +1,16 @@
-use crate::traits::{
-    constraint::Constraint, fdm_mesher::Mesher1d, linear_operator::LinearOperator, real::Real,
-    solver_strategy::SolverStrategy,
+use crate::{
+    solvers::{
+        finite_difference::{constraints::Constraint, meshers::Mesher1d},
+        linear_operators::LinearOperator,
+    },
+    traits::solver_strategy::SolverStrategy,
+    types::Real,
 };
 
 pub struct Unconstrained;
 impl<T: Real, M: Mesher1d<T>, L: LinearOperator<T, M>> SolverStrategy<T, M, L> for Unconstrained {
-    fn solve_stage(&self, op: &L, b: &[T], coeff: T, _t: T, _m: &M, dest: &mut [T], z: &mut [T]) {
-        op.solve_inverse_into(b, coeff, _t, dest, z);
+    fn solve_stage(&self, op: &L, b: &[T], coeff: T, t: T, _m: &M, dest: &mut [T], z: &mut [T]) {
+        op.solve_inverse_into(b, coeff, t, dest, z);
     }
 }
 

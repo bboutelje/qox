@@ -1,15 +1,16 @@
 use crate::market::market_frame::OptionMarketFrame;
-use crate::solvers::black_scholes::finite_difference::meshing::uniform::UniformMesher1d;
-use crate::solvers::black_scholes::finite_difference::process::BlackScholesProcess;
-use crate::solvers::black_scholes::finite_difference::solver_old::FdmConfig;
-use crate::solvers::black_scholes::finite_difference::solver_old::Solver;
-use crate::solvers::black_scholes::finite_difference::transforms::log::LogTransform;
+use crate::processes::black_scholes::BlackScholesProcess;
+use crate::solvers::finite_difference::meshers::uniform::UniformMesher1d;
+use crate::solvers::finite_difference::solver_old::FdmConfig;
+use crate::solvers::finite_difference::solver_old::Solver;
+use crate::solvers::finite_difference::transforms::log::LogTransform;
 use crate::solvers::time_stepping::dimsim2::Dimsim2;
 use crate::traits::payoff::{Payoff, PayoffAsInitialConditions};
 use crate::traits::{
     instrument::OptionInstrument, pricing_engine::OptionEvaluable, rate_curve::RateCurve,
-    real::Real, vol_surface::VolSurface,
+    vol_surface::VolSurface,
 };
+use crate::types::Real;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Evaluator {

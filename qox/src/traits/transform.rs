@@ -1,4 +1,4 @@
-use crate::traits::real::Real;
+use crate::types::Real;
 
 pub trait Transform<T: Real> {
     fn to_mesh(&self, physical: T) -> T;

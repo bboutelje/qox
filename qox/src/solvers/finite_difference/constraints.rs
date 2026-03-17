@@ -1,6 +1,11 @@
-use crate::traits::{
-    constraint::Constraint, fdm_mesher::Mesher1d, payoff::InitialConditions, real::Real,
+use crate::{
+    solvers::finite_difference::meshers::Mesher1d, traits::payoff::InitialConditions, types::Real,
 };
+
+pub trait Constraint<T: Real, M: Mesher1d<T>> {
+    fn apply(&self, price: &mut [T], mesher: &M);
+    fn lower_bound(&self, i: usize, mesher: &M) -> T;
+}
 
 #[derive(Clone, Copy)]
 pub struct NoConstraint;

@@ -1,4 +1,10 @@
-use crate::{solvers::time_stepping::glm::{GlmState, GlmTableau, GlmWorkspace}, traits::{real::Real, time_stepper::TimeStepper}};
+use crate::{
+    solvers::time_stepping::{
+        TimeStepper,
+        glm::{GlmState, GlmTableau, GlmWorkspace},
+    },
+    types::Real,
+};
 
 pub struct Sdirk22<T: Real> {
     tableau: GlmTableau<T, 2, 1>,
@@ -15,8 +21,7 @@ impl<T: Real> Sdirk22<T> {
         Self {
             tableau: GlmTableau {
                 // A: [[gamma, 0], [1-2*gamma, gamma]]
-                a: [[gamma, zero], 
-                    [a21,   gamma]],
+                a: [[gamma, zero], [a21, gamma]],
                 // U: [[1], [1]] -> Both stages start from y_n
                 u: [[one], [one]],
                 // B: [[1-gamma, gamma]] -> Combination for y_{n+1}
@@ -31,7 +36,9 @@ impl<T: Real> Sdirk22<T> {
 }
 
 impl<T: Real> TimeStepper<T, 2, 1> for Sdirk22<T> {
-    fn tableau(&self) -> &GlmTableau<T, 2, 1> { &self.tableau }
+    fn tableau(&self) -> &GlmTableau<T, 2, 1> {
+        &self.tableau
+    }
 
     fn prepare_stage_rhs(
         &self,
@@ -59,17 +66,16 @@ impl<T: Real> TimeStepper<T, 2, 1> for Sdirk22<T> {
         }
     }
 
-
     // Remove 'mut' from 'ws'
     fn finalize_step(&self, state: &mut GlmState<T>, ws: &GlmWorkspace<T>, dt: T) {
         let n = state.n;
-        
+
         // These are immutable borrows of the workspace buffers
         let l_y1 = &ws.l_stages[0..n];
         let l_y2 = &ws.l_stages[n..2 * n];
-        
-        let b1 = self.tableau.b[0][0]; 
-        let b2 = self.tableau.b[0][1]; 
+
+        let b1 = self.tableau.b[0][0];
+        let b2 = self.tableau.b[0][1];
 
         // Update state.items in place
         for i in 0..n {

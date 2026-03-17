@@ -1,26 +1,21 @@
-use crate::solvers::black_scholes::finite_difference::constraints::AmericanConstraint;
-use crate::solvers::black_scholes::finite_difference::strategies::Constrained;
+use crate::processes::black_scholes::BlackScholesProcess;
+use crate::solvers::finite_difference::constraints::AmericanConstraint;
+use crate::solvers::finite_difference::meshers::uniform::UniformMesher1d;
+use crate::solvers::finite_difference::solver::Solver;
+use crate::solvers::finite_difference::solver_old::FdmConfig;
+use crate::solvers::finite_difference::strategies::Constrained;
+use crate::solvers::finite_difference::transforms::log::LogTransform;
 use crate::solvers::time_stepping::crank_nicolson::CrankNicolson;
-use crate::solvers::time_stepping::dimsim2::Dimsim2;
-use crate::solvers::time_stepping::implicit_euler::ImplicitEuler;
-use crate::solvers::time_stepping::sdirk22::Sdirk22;
 use crate::traits::rate_curve::RateCurve;
 use crate::traits::vol_surface::VolSurface;
+use crate::types::Real;
 use crate::{
     core::period::{DayCountConvention, DefaultPeriodCalculator, PeriodCalculator},
     evaluators::black_scholes::finite_difference::VanillaPayoff,
-    solvers::{
-        black_scholes::finite_difference::{
-            meshing::uniform::UniformMesher1d, process::BlackScholesProcess, solver::Solver,
-            solver_old::FdmConfig, transforms::log::LogTransform,
-        },
-        //time_stepping::dimsim2::Dimsim2,
-    },
     traits::{
         instrument::{Instrument, OptionInstrument, OptionType},
         market_view::OptionMarketView,
         payoff::PayoffAsInitialConditions,
-        real::Real,
     },
 };
 use chrono::{DateTime, Utc};
@@ -92,10 +87,11 @@ impl<T: Real> OptionInstrument<T, VanillaPayoff> for StockOption {
         let mesher = UniformMesher1d::new(s_min.ln(), s_max.ln(), solver.config.nodes, transform);
 
         let process = BlackScholesProcess::new(rate, vol, transform);
-        let stepper = Dimsim2::new();
+        let stepper = CrankNicolson::new();
         let strategy = Constrained {
             constraint: AmericanConstraint::new(initial_conditions),
         };
+
         solver.solve(
             process,
             stepper,

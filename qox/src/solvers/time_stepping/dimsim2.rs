@@ -1,9 +1,11 @@
-use crate::real::complex::ComplexWrapper;
 use nalgebra::Complex;
 
 use crate::{
-    solvers::time_stepping::glm::{GlmState, GlmTableau, GlmWorkspace},
-    traits::{real::Real, time_stepper::TimeStepper},
+    solvers::time_stepping::{
+        TimeStepper,
+        glm::{GlmState, GlmTableau, GlmWorkspace},
+    },
+    types::{Real, complex::ComplexWrapper},
 };
 
 pub struct Dimsim2<T: Real> {

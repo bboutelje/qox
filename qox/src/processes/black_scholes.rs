@@ -1,6 +1,11 @@
-use crate::solvers::black_scholes::finite_difference::tridiagonal_operator::TridiagonalOperator;
-use crate::traits::{
-    fdm_mesher::Mesher1d, fdm_process::FdmProcess, real::Real, transform::Transform,
+use crate::{
+    processes::FdmProcess,
+    solvers::{
+        finite_difference::meshers::Mesher1d,
+        linear_operators::tridiagonal_operator::TridiagonalOperator,
+    },
+    traits::transform::Transform,
+    types::Real,
 };
 
 pub struct BlackScholesProcess<T: Real, Tr: Transform<T>> {
@@ -83,7 +88,6 @@ impl<T: Real, Tr: Transform<T>> BlackScholesProcess<T, Tr> {
 
         let j2 = j * j;
         let a = s2_sig2 / (two * j2);
-
         let b = (self.r * s / j) - (s2_sig2 * h) / (two * j2 * j);
 
         let c = -self.r;

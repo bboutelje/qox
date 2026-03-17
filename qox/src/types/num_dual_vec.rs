@@ -1,4 +1,4 @@
-use crate::traits::real::Real;
+use crate::types::Real;
 use nalgebra::ComplexField;
 use nalgebra::Const;
 use num_dual::{Derivative, DualStruct, DualVec};

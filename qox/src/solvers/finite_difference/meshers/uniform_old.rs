@@ -1,4 +1,4 @@
-use crate::traits::{fdm_mesher::Mesher1d, real::{Real}};
+use crate::{solvers::finite_difference::meshers::Mesher1d, types::Real};
 
 pub struct UniformMesher1d<T: Real> {
     pub centers: Vec<T>,
@@ -7,10 +7,10 @@ pub struct UniformMesher1d<T: Real> {
 }
 
 impl<T> UniformMesher1d<T>
-where T: Real
+where
+    T: Real,
 {
     pub fn new(start: T, end: T, size: usize) -> Self {
-
         let mut centers = Vec::with_capacity(size);
         let n_minus_1 = T::from_f64((size - 1) as f64);
         let dx = (end - start) / n_minus_1;
@@ -22,7 +22,11 @@ where T: Real
         }
 
         let (h_plus, h_minus) = Self::build_distances(&centers);
-        Self { centers, h_plus, h_minus }
+        Self {
+            centers,
+            h_plus,
+            h_minus,
+        }
     }
 
     fn build_distances(centers: &[T]) -> (Vec<T>, Vec<T>) {
@@ -32,7 +36,7 @@ where T: Real
         for (i, window) in centers.windows(2).enumerate() {
             let (left, right) = (window[0], window[1]);
             let diff = right - left;
-            
+
             hp[i] = diff.clone();
             hm[i + 1] = diff;
         }
@@ -40,10 +44,17 @@ where T: Real
     }
 }
 
-impl<T: Real> Mesher1d<T> for UniformMesher1d<T>
-{
-    fn size(&self) -> usize { self.centers.len() }
-    fn centers(&self) -> &[T] { &self.centers }
-    fn h_plus(&self) -> &[T] { &self.h_plus }
-    fn h_minus(&self) -> &[T] { &self.h_minus }
+impl<T: Real> Mesher1d<T> for UniformMesher1d<T> {
+    fn size(&self) -> usize {
+        self.centers.len()
+    }
+    fn centers(&self) -> &[T] {
+        &self.centers
+    }
+    fn h_plus(&self) -> &[T] {
+        &self.h_plus
+    }
+    fn h_minus(&self) -> &[T] {
+        &self.h_minus
+    }
 }

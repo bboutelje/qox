@@ -1,5 +1,15 @@
+use crate::{
+    core::period::{DayCountConvention, DefaultPeriodCalculator, PeriodCalculator},
+    traits::{
+        instrument::{Instrument, OptionInstrument, OptionType},
+        market_view::OptionMarketView,
+        payoff::Payoff,
+        rate_curve::RateCurve,
+        vol_surface::VolSurface,
+    },
+    types::Real,
+};
 use chrono::{DateTime, Utc};
-use crate::{core::period::{DayCountConvention, DefaultPeriodCalculator, PeriodCalculator}, traits::{instrument::{Instrument, OptionInstrument, OptionType}, market_view::OptionMarketView, payoff::Payoff, rate_curve::RateCurve, real::Real, vol_surface::VolSurface}};
 
 #[derive(Debug, Clone, Copy)]
 pub struct FutureOption<P> {
@@ -23,7 +33,6 @@ impl<P> FutureOption<P> {
 impl<P> Instrument for FutureOption<P> {}
 
 impl<T: Real, P: Payoff<T> + Copy> OptionInstrument<T, P> for FutureOption<P> {
-    
     fn strike(self) -> f64 {
         self.strike
     }
@@ -33,31 +42,25 @@ impl<T: Real, P: Payoff<T> + Copy> OptionInstrument<T, P> for FutureOption<P> {
     }
 
     fn years_to_expiry(self) -> T {
-
         let now = Utc::now().date_naive();
         let expiry_date = self.expiry.date_naive();
 
         let calculator = DefaultPeriodCalculator;
-        let years = calculator.year_fraction(
-            now, 
-            expiry_date, 
-            DayCountConvention::Actual365Fixed,
-        );
+        let years = calculator.year_fraction(now, expiry_date, DayCountConvention::Actual365Fixed);
 
         Real::from_f64(years.0)
     }
-    
-    fn evaluate<M, RC, VS>(self, _market_frame: &M) -> T 
+
+    fn evaluate<M, RC, VS>(self, _market_frame: &M) -> T
     where
         RC: RateCurve<T>,
         VS: VolSurface<T>,
-        M: OptionMarketView<T, RC, VS> {
-        todo!()
-    }
-    
-    fn get_payoff(self) -> P {
+        M: OptionMarketView<T, RC, VS>,
+    {
         todo!()
     }
 
-    
+    fn get_payoff(self) -> P {
+        todo!()
+    }
 }

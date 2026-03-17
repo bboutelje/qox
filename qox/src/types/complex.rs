@@ -1,4 +1,3 @@
-use crate::traits::real::Real;
 use num_complex::Complex;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -64,6 +63,8 @@ impl Real for ComplexWrapper {
 }
 
 use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub, SubAssign};
+
+use crate::types::Real;
 
 // --- Unary Negation ---
 impl Neg for ComplexWrapper {

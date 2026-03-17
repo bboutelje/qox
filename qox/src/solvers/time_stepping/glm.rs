@@ -1,4 +1,4 @@
-use crate::traits::{real::Real, time_stepper::TimeStepper};
+use crate::{solvers::time_stepping::TimeStepper, types::Real};
 
 pub struct GlmTableau<T, const S: usize, const R: usize> {
     pub a: [[T; S]; S],

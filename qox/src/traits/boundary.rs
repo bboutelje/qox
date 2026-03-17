@@ -1,4 +1,4 @@
-use crate::traits::real::Real;
+use crate::types::Real;
 
 pub trait BoundaryCondition<T: Real> {
     fn apply_lower(&self, t: &T) -> T;

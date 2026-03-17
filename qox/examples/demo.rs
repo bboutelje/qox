@@ -1,6 +1,5 @@
-use std::time::Instant;
-
 use chrono::{Duration, Utc};
+
 use qox::{
     instruments::stock_option::StockOption,
     market::{
@@ -9,6 +8,7 @@ use qox::{
     },
     traits::instrument::{OptionInstrument, OptionType},
 };
+use std::time::Instant;
 
 pub fn main() {
     let stock_option = StockOption::new(100.0, Utc::now() + Duration::days(365), OptionType::Put);

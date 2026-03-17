@@ -1,7 +1,7 @@
 use crate::traits::market_view::{MarketView, OptionMarketView};
 use crate::traits::rate_curve::RateCurve;
-use crate::traits::real::Real;
 use crate::traits::vol_surface::VolSurface;
+use crate::types::Real;
 
 #[derive(Debug, Clone)]
 pub struct MarketFrame<T, RC>
@@ -13,12 +13,11 @@ where
     pub rate_curve: RC,
 }
 
-impl<T: Real, RC: RateCurve<T>> MarketView<T, RC> for MarketFrame<T, RC>
-{
+impl<T: Real, RC: RateCurve<T>> MarketView<T, RC> for MarketFrame<T, RC> {
     fn spot_price(&self) -> T {
         self.spot_price
     }
-    
+
     fn rate_curve(&self) -> &RC {
         &self.rate_curve
     }
@@ -47,9 +46,8 @@ where
     }
 
     fn rate_curve(&self) -> &RC {
-        &self.rate_curve 
+        &self.rate_curve
     }
-    
 }
 
 impl<T, RC, VS> OptionMarketView<T, RC, VS> for OptionMarketFrame<T, RC, VS>
