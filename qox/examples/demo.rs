@@ -1,12 +1,11 @@
 use chrono::{Duration, Utc};
-
+use qox::instruments::{OptionInstrument, OptionType};
 use qox::{
     instruments::stock_option::StockOption,
     market::{
         market_frame::OptionMarketFrame, rate_curve::ContinuousRateCurve,
         vol_surface::FlatVolSurface,
     },
-    traits::instrument::{OptionInstrument, OptionType},
 };
 use std::time::Instant;
 

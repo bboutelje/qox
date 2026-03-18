@@ -1,5 +1,6 @@
+use crate::instruments::Instrument;
 use crate::market::market_frame::{MarketFrame, OptionMarketFrame};
-use crate::traits::instrument::Instrument;
+
 use crate::traits::payoff::Payoff;
 use crate::traits::rate_curve::RateCurve;
 use crate::traits::vol_surface::VolSurface;

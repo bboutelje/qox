@@ -28,6 +28,7 @@ where
     T: Real,
     P: Payoff<T> + Copy,
 {
+    #[inline]
     fn get_value(self, spot: T) -> T {
         self.payoff.calculate(spot)
     }

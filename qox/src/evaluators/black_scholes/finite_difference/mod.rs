@@ -1,10 +1,7 @@
 pub mod evaluator;
 pub mod evaluator_kernel;
 
-use crate::{
-    traits::{instrument::OptionType, payoff::Payoff},
-    types::Real,
-};
+use crate::{instruments::OptionType, traits::payoff::Payoff, types::Real};
 
 #[derive(Copy, Clone)]
 pub struct VanillaPayoff {

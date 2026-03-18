@@ -1,10 +1,9 @@
 use crate::{
-    processes::FdmProcess,
-    solvers::{
+    methods::{
         finite_difference::meshers::Mesher1d,
-        linear_operators::tridiagonal_operator::TridiagonalOperator,
+        linear_operators_old::tridiagonal_operator::TridiagonalOperator, transforms::Transform,
     },
-    traits::transform::Transform,
+    processes::FdmProcess,
     types::Real,
 };
 

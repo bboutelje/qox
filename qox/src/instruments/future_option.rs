@@ -1,10 +1,8 @@
 use crate::{
     core::period::{DayCountConvention, DefaultPeriodCalculator, PeriodCalculator},
+    instruments::{Instrument, OptionInstrument, OptionType},
     traits::{
-        instrument::{Instrument, OptionInstrument, OptionType},
-        market_view::OptionMarketView,
-        payoff::Payoff,
-        rate_curve::RateCurve,
+        market_view::OptionMarketView, payoff::Payoff, rate_curve::RateCurve,
         vol_surface::VolSurface,
     },
     types::Real,
@@ -37,7 +35,7 @@ impl<T: Real, P: Payoff<T> + Copy> OptionInstrument<T, P> for FutureOption<P> {
         self.strike
     }
 
-    fn option_type(self) -> crate::traits::instrument::OptionType {
+    fn option_type(self) -> OptionType {
         self.option_type
     }
 

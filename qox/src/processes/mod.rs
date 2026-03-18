@@ -1,6 +1,8 @@
 use crate::{
-    solvers::{finite_difference::meshers::Mesher1d, linear_operators::LinearOperator},
-    traits::transform::Transform,
+    methods::{
+        finite_difference::meshers::Mesher1d, linear_operators_old::LinearOperator,
+        transforms::Transform,
+    },
     types::Real,
 };
 

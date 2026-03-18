@@ -1,22 +1,18 @@
+use crate::instruments::{Instrument, OptionInstrument, OptionType};
+use crate::methods::constraints::american::AmericanConstraint;
+use crate::methods::finite_difference::free_boundary::psor::PsorConstrained;
+use crate::methods::finite_difference::meshers::uniform::UniformMesher1d;
+use crate::methods::finite_difference::solver::{FdmConfig, Solver};
+use crate::methods::time_stepping::dimsim2::Dimsim2;
+use crate::methods::transforms::log::LogTransform;
 use crate::processes::black_scholes::BlackScholesProcess;
-use crate::solvers::finite_difference::constraints::AmericanConstraint;
-use crate::solvers::finite_difference::meshers::uniform::UniformMesher1d;
-use crate::solvers::finite_difference::solver::Solver;
-use crate::solvers::finite_difference::solver_old::FdmConfig;
-use crate::solvers::finite_difference::strategies::Constrained;
-use crate::solvers::finite_difference::transforms::log::LogTransform;
-use crate::solvers::time_stepping::crank_nicolson::CrankNicolson;
 use crate::traits::rate_curve::RateCurve;
 use crate::traits::vol_surface::VolSurface;
 use crate::types::Real;
 use crate::{
     core::period::{DayCountConvention, DefaultPeriodCalculator, PeriodCalculator},
     evaluators::black_scholes::finite_difference::VanillaPayoff,
-    traits::{
-        instrument::{Instrument, OptionInstrument, OptionType},
-        market_view::OptionMarketView,
-        payoff::PayoffAsInitialConditions,
-    },
+    traits::{market_view::OptionMarketView, payoff::PayoffAsInitialConditions},
 };
 use chrono::{DateTime, Utc};
 
@@ -44,7 +40,7 @@ impl<T: Real> OptionInstrument<T, VanillaPayoff> for StockOption {
         self.strike
     }
 
-    fn option_type(self) -> crate::traits::instrument::OptionType {
+    fn option_type(self) -> OptionType {
         self.option_type
     }
 
@@ -69,7 +65,7 @@ impl<T: Real> OptionInstrument<T, VanillaPayoff> for StockOption {
         let solver = Solver {
             config: FdmConfig {
                 nodes: 1000,
-                time_steps: 1000,
+                time_steps: 10,
             },
         };
 
@@ -87,8 +83,8 @@ impl<T: Real> OptionInstrument<T, VanillaPayoff> for StockOption {
         let mesher = UniformMesher1d::new(s_min.ln(), s_max.ln(), solver.config.nodes, transform);
 
         let process = BlackScholesProcess::new(rate, vol, transform);
-        let stepper = CrankNicolson::new();
-        let strategy = Constrained {
+        let stepper = Dimsim2::new();
+        let free_boundary_strategy = PsorConstrained {
             constraint: AmericanConstraint::new(initial_conditions),
         };
 
@@ -100,7 +96,8 @@ impl<T: Real> OptionInstrument<T, VanillaPayoff> for StockOption {
             dt,
             solver.config,
             market_frame.spot_price(),
-            strategy,
+            //Unconstrained,
+            free_boundary_strategy,
         )
     }
 

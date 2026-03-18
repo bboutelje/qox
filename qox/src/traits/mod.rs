@@ -1,13 +1,10 @@
 pub mod boundary;
 pub mod calendar;
-pub mod fdm_process;
 pub mod instrument;
 pub mod market_view;
 pub mod payoff;
 pub mod pricing_engine;
 pub mod rate_curve;
-pub mod solver_strategy;
-pub mod transform;
 pub mod vol_surface;
 
 // pub trait EvaluationResolver<RC, VS> {
