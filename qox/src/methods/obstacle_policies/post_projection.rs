@@ -1,29 +1,19 @@
 use crate::{
     methods::{
-        constraints::Constraint,
-        finite_difference::{free_boundary::FreeBoundaryStrategy, meshers::Mesher1d},
-        linear_operators_old::LinearOperator,
+        constraints::Constraint, finite_difference::meshers::Mesher1d,
+        linear_operators::LinearOperator, obstacle_policies::ObstaclePolicy,
     },
     types::Real,
 };
 
-pub struct ProjectionConstrained<C> {
+pub struct PostProjectionPolicy<C> {
     pub constraint: C,
 }
-impl<T: Real, M: Mesher1d<T>, L: LinearOperator<T, M>, C: Constraint<T, M>>
-    FreeBoundaryStrategy<T, M, L> for ProjectionConstrained<C>
+impl<T: Real, M: Mesher1d<T>, L: LinearOperator<T>, C: Constraint<T, M>> ObstaclePolicy<T, M, L>
+    for PostProjectionPolicy<C>
 {
-    fn solve_stage(
-        &self,
-        op: &L,
-        b_in_ax_equals_b: &[T],
-        coeff: T,
-        t: T,
-        mesh: &M,
-        dest: &mut [T],
-        z: &mut [T],
-    ) {
-        op.solve_inverse_into(b_in_ax_equals_b, coeff, t, dest, z);
+    fn solve_stage(&self, op: &L, b: &[T], coeff: T, t: T, mesh: &M, dest: &mut [T], z: &mut [T]) {
+        op.solve_inverse_into(b, coeff, t, dest, z);
 
         self.constraint.apply(dest, mesh);
     }
@@ -45,8 +35,6 @@ impl<T: Real, M: Mesher1d<T>, L: LinearOperator<T, M>, C: Constraint<T, M>>
             let s = mesher.location(j);
             let payoff = initial_conditions.get_value(s);
 
-            // If we are at or below the payoff (for a Put) or above (for a Call),
-            // the value is 'pinned', so the time derivative f(y) effectively becomes 0.
             if stage_slice[j] <= payoff + T::from_f64(f64::EPSILON) {
                 l_stage_slice[j] = T::zero();
             }

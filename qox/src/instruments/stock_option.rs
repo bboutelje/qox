@@ -1,8 +1,13 @@
 use crate::instruments::{Instrument, OptionInstrument, OptionType};
 use crate::methods::constraints::american::AmericanConstraint;
-use crate::methods::finite_difference::free_boundary::psor::PsorConstrained;
+use crate::methods::finite_difference::free_boundary::projection::ProjectionConstrained;
+
+use crate::methods::finite_difference::free_boundary::unconstrained::Unconstrained;
 use crate::methods::finite_difference::meshers::uniform::UniformMesher1d;
 use crate::methods::finite_difference::solver::{FdmConfig, Solver};
+use crate::methods::obstacle_policies::ObstaclePolicy;
+use crate::methods::obstacle_policies::no_obstacle::NoObstaclePolicy;
+use crate::methods::obstacle_policies::post_projection::PostProjectionPolicy;
 use crate::methods::time_stepping::dimsim2::Dimsim2;
 use crate::methods::transforms::log::LogTransform;
 use crate::processes::black_scholes::BlackScholesProcess;
@@ -65,7 +70,7 @@ impl<T: Real> OptionInstrument<T, VanillaPayoff> for StockOption {
         let solver = Solver {
             config: FdmConfig {
                 nodes: 1000,
-                time_steps: 10,
+                time_steps: 20,
             },
         };
 
@@ -84,7 +89,11 @@ impl<T: Real> OptionInstrument<T, VanillaPayoff> for StockOption {
 
         let process = BlackScholesProcess::new(rate, vol, transform);
         let stepper = Dimsim2::new();
-        let free_boundary_strategy = PsorConstrained {
+        // let free_boundary_strategy = ProjectionConstrained {
+        //     constraint: AmericanConstraint::new(initial_conditions),
+        // };
+
+        let obstacle_policy = PostProjectionPolicy {
             constraint: AmericanConstraint::new(initial_conditions),
         };
 
@@ -96,8 +105,8 @@ impl<T: Real> OptionInstrument<T, VanillaPayoff> for StockOption {
             dt,
             solver.config,
             market_frame.spot_price(),
-            //Unconstrained,
-            free_boundary_strategy,
+            //NoObstaclePolicy,
+            obstacle_policy,
         )
     }
 

@@ -1,7 +1,8 @@
 use crate::{
     methods::{
-        finite_difference::{free_boundary::FreeBoundaryStrategy, meshers::Mesher1d},
-        linear_operators_old::LinearOperator,
+        finite_difference::meshers::Mesher1d,
+        linear_operators::LinearOperator,
+        obstacle_policies::ObstaclePolicy,
         time_stepping::{
             TimeStepper,
             glm::{GlmWorkspace, InputVector},
@@ -24,7 +25,7 @@ pub struct FdmConfig {
 }
 
 impl Solver {
-    pub fn solve<T, Tr, L, M, P, Step, IC, FBC, const S: usize, const R: usize>(
+    pub fn solve<T, Tr, L, M, P, Step, IC, OP, const S: usize, const R: usize>(
         &self,
         process: P,
         stepper: Step,
@@ -33,7 +34,7 @@ impl Solver {
         dt: T,
         config: FdmConfig,
         spot: T,
-        strategy: FBC,
+        obstacle_policy: OP,
     ) -> T
     where
         T: Real,
@@ -41,9 +42,9 @@ impl Solver {
         M: Mesher1d<T>,
         Step: TimeStepper<T, S, R>,
         P: FdmProcess<T, L, M, Tr>,
-        L: LinearOperator<T, M>,
+        L: LinearOperator<T>,
         IC: InitialConditions<T> + Copy,
-        FBC: FreeBoundaryStrategy<T, M, L>,
+        OP: ObstaclePolicy<T, M, L>,
     {
         let operator = process.build_operator(&mesher);
 
@@ -78,7 +79,7 @@ impl Solver {
 
                 let stage_slice = &mut workspace.stages[i * n..(i + 1) * n];
 
-                strategy.solve_stage(
+                obstacle_policy.solve_stage(
                     &operator,
                     &workspace.rhs_buffer,
                     stage_coeff,
@@ -89,7 +90,7 @@ impl Solver {
                 );
 
                 let l_stage_slice = &mut workspace.l_stages[i * n..(i + 1) * n];
-                strategy.compute_stage_derivative(
+                obstacle_policy.compute_stage_derivative(
                     &operator,
                     stage_slice,
                     next_t,

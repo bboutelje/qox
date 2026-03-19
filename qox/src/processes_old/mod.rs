@@ -1,6 +1,6 @@
 use crate::{
     methods::{
-        finite_difference::meshers::Mesher1d, linear_operators::LinearOperator,
+        finite_difference::meshers::Mesher1d, linear_operators_old::LinearOperator,
         transforms::Transform,
     },
     types::Real,
@@ -8,7 +8,7 @@ use crate::{
 
 pub mod black_scholes;
 
-pub trait FdmProcess<T: Real, L: LinearOperator<T>, M: Mesher1d<T>, Tr: Transform<T> + Copy> {
+pub trait FdmProcess<T: Real, L: LinearOperator<T, M>, M: Mesher1d<T>, Tr: Transform<T> + Copy> {
     fn transform(&self) -> Tr;
     fn build_operator(&self, mesher: &M) -> L;
 }

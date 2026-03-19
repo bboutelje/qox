@@ -1,72 +1,72 @@
-use crate::methods::finite_difference::meshers::Mesher1d;
-use crate::methods::finite_difference::meshers::log::LogMesher1d;
-use crate::methods::finite_difference::meshers::uniform_old::UniformMesher1d;
-use crate::methods::finite_difference::operator_old::BsOperator;
-use crate::methods::finite_difference::solver::FdmConfig;
-//use std::time::Instant;
-use crate::methods::linear_operators_old::LinearOperator;
-use crate::methods::time_stepping::TimeStepper;
-use crate::methods::time_stepping::glm::InputVector;
-use crate::types::Real;
-use crate::{methods::time_stepping::glm::GlmWorkspace, traits::payoff::InitialConditions};
+use crate::{
+    methods::{
+        finite_difference::{free_boundary::FreeBoundaryStrategy, meshers::Mesher1d},
+        linear_operators_old::LinearOperator,
+        time_stepping::{
+            TimeStepper,
+            glm::{GlmWorkspace, InputVector},
+        },
+        transforms::Transform,
+    },
+    processes_old::FdmProcess,
+    traits::payoff::InitialConditions,
+    types::Real,
+};
 
 pub struct Solver {
     pub config: FdmConfig,
 }
 
+#[derive(Debug, Clone, Copy)]
+pub struct FdmConfig {
+    pub nodes: usize,
+    pub time_steps: usize,
+}
+
 impl Solver {
-    pub fn solve<IC, T, Step, const S: usize, const R: usize>(
-        self,
+    pub fn solve<T, Tr, L, M, P, Step, IC, FBC, const S: usize, const R: usize>(
+        &self,
+        process: P,
         stepper: Step,
-        initial_condition: IC,
-        years_to_expiry: T,
+        initial_conditions: IC,
+        mesher: M,
+        dt: T,
+        config: FdmConfig,
         spot: T,
-        rate: T,
-        vol: T,
+        strategy: FBC,
     ) -> T
     where
         T: Real,
-        IC: InitialConditions<T> + Copy,
+        Tr: Transform<T> + Copy,
+        M: Mesher1d<T>,
         Step: TimeStepper<T, S, R>,
+        P: FdmProcess<T, L, M, Tr>,
+        L: LinearOperator<T, M>,
+        IC: InitialConditions<T> + Copy,
+        FBC: FreeBoundaryStrategy<T, M, L>,
     {
-        let zero = T::zero();
+        let operator = process.build_operator(&mesher);
 
-        let s_min = T::from_f64(0.01);
-        let s_max = spot * T::from_f64(5.0);
+        let mut vector = InputVector::<T>::new(R, config.nodes, T::zero());
+        let mut workspace = GlmWorkspace::<T>::new(S, config.nodes);
 
-        let mesher = LogMesher1d::new(UniformMesher1d::new(
-            s_min.ln(),
-            s_max.ln(),
-            self.config.nodes,
-        ));
-        let dt = years_to_expiry / T::from_f64(self.config.time_steps as f64);
+        let initial_v = self.initialize_payoff(initial_conditions, &mesher);
 
-        let operator = BsOperator {
-            mesher: &mesher,
-            r: rate.into(),
-            sigma: vol.into(),
-            cache: std::cell::RefCell::new(None),
-        };
-
-        let mut state = InputVector::<T>::new(R, self.config.nodes, zero);
-        let mut workspace = GlmWorkspace::<T>::new(S, self.config.nodes);
-
-        let initial_v = self.initialize_payoff(initial_condition, &mesher);
-        state.step_slice_mut(0).copy_from_slice(&initial_v);
+        vector.step_slice_mut(0).copy_from_slice(&initial_v);
 
         let n = self.config.nodes;
         if R > 1 {
-            let (y_slice, f_slice) = state.items.split_at_mut(n);
-            operator.apply_into(y_slice, zero, f_slice);
+            let (y_slice, f_slice) = vector.items.split_at_mut(n);
+            operator.apply_into(y_slice, T::zero(), f_slice);
         }
 
-        for _ in 0..self.config.time_steps {
-            let next_t = state.current_time + dt;
+        for _ in 0..config.time_steps {
+            let next_t = vector.current_time + dt;
 
             for i in 0..S {
                 stepper.prepare_stage_rhs(
                     i,
-                    &state,
+                    &vector,
                     &workspace.stages,
                     &workspace.l_stages,
                     dt,
@@ -78,27 +78,51 @@ impl Solver {
 
                 let stage_slice = &mut workspace.stages[i * n..(i + 1) * n];
 
-                operator.solve_inverse_into(
+                strategy.solve_stage(
+                    &operator,
                     &workspace.rhs_buffer,
                     stage_coeff,
                     next_t,
+                    &mesher,
                     stage_slice,
                     &mut workspace.z_buffer,
                 );
 
                 let l_stage_slice = &mut workspace.l_stages[i * n..(i + 1) * n];
-                operator.apply_into(stage_slice, next_t, l_stage_slice);
+                strategy.compute_stage_derivative(
+                    &operator,
+                    stage_slice,
+                    next_t,
+                    &mesher,
+                    initial_conditions,
+                    l_stage_slice,
+                );
+                // operator.apply_into(stage_slice, next_t, l_stage_slice);
+
+                // for j in 0..n {
+                //     let s = mesher.location(j);
+                //     let payoff = initial_conditions.get_value(s);
+
+                //     // If we are at or below the payoff (for a Put) or above (for a Call),
+                //     // the value is 'pinned', so the time derivative f(y) effectively becomes 0.
+                //     if stage_slice[j] <= payoff + T::from_f64(f64::EPSILON) {
+                //         l_stage_slice[j] = T::zero();
+                //     }
+                // }
             }
 
-            stepper.finalize_step(&mut state, &workspace, dt);
-            state.current_time = next_t;
+            stepper.finalize_step(&mut vector, &workspace, dt);
+            vector.current_time = next_t;
+
+            // if R > 1 {
+            //     let (y_slice, f_slice) = vector.items.split_at_mut(n);
+            //     operator.apply_into(y_slice, next_t, f_slice);
+            // }
         }
 
-        self.interpolate(&mesher, state.step_slice(0), spot.into())
+        self.interpolate(&mesher, vector.step_slice(0), spot)
     }
-}
 
-impl Solver {
     fn initialize_payoff<T, IC, M>(&self, initial_condition: IC, mesher: &M) -> Vec<T>
     where
         T: Real,

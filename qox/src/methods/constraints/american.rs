@@ -8,11 +8,13 @@ use crate::{
 pub struct AmericanConstraint<IC> {
     pub payoff: IC,
 }
+
 impl<IC> AmericanConstraint<IC> {
     pub fn new(payoff: IC) -> Self {
         Self { payoff }
     }
 }
+
 impl<T: Real, IC: InitialConditions<T> + Copy, M: Mesher1d<T>> Constraint<T, M>
     for AmericanConstraint<IC>
 {
@@ -20,9 +22,7 @@ impl<T: Real, IC: InitialConditions<T> + Copy, M: Mesher1d<T>> Constraint<T, M>
     fn apply(&self, price: &mut [T], mesher: &M) {
         for i in 0..price.len() {
             let p = self.payoff.get_value(mesher.location(i));
-            if price[i] < p {
-                price[i] = p;
-            }
+            price[i] = price[i].max(p);
         }
     }
 

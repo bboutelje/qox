@@ -45,16 +45,23 @@ impl<T: Real> LinearOperator<T> for TridiagonalOperator<T> {
 
     fn apply_into(&self, v: &[T], _t: T, out: &mut [T]) {
         let n = self.size();
-        for i in 0..n {
-            let mut val = self.diag[i] * v[i];
-            if i > 0 {
-                val += self.lower[i] * v[i - 1];
-            }
-            if i < n - 1 {
-                val += self.upper[i] * v[i + 1];
-            }
-            out[i] = val;
+        if n == 0 {
+            return;
         }
+
+        if n == 1 {
+            out[0] = self.diag[0] * v[0];
+            return;
+        }
+
+        out[0] = self.diag[0] * v[0] + self.upper[0] * v[1];
+
+        for i in 1..n - 1 {
+            out[i] = self.lower[i] * v[i - 1] + self.diag[i] * v[i] + self.upper[i] * v[i + 1];
+        }
+
+        let last = n - 1;
+        out[last] = self.lower[last] * v[last - 1] + self.diag[last] * v[last];
     }
 
     fn setup_coeff(&self, coeff: T) {

@@ -3,7 +3,7 @@ use crate::{
         complementarity::ComplementaritySolver,
         constraints::Constraint,
         finite_difference::meshers::Mesher1d,
-        linear_operators_old::{LinearOperator, tridiagonal_operator::TridiagonalOperator},
+        linear_operators::{LinearOperator, tridiagonal_operator::TridiagonalOperator},
     },
     types::Real,
 };
@@ -14,7 +14,7 @@ pub struct Psor {
     pub max_iter: usize,
 }
 
-impl<T, M, C> ComplementaritySolver<T, M, TridiagonalOperator<T, M>, C> for Psor
+impl<T, M, C> ComplementaritySolver<T, M, TridiagonalOperator<T>, C> for Psor
 where
     T: Real,
     M: Mesher1d<T>,
@@ -22,7 +22,7 @@ where
 {
     fn solve(
         &self,
-        op: &TridiagonalOperator<T, M>,
+        op: &TridiagonalOperator<T>,
         rhs: &[T],
         kappa: T,
         constraint: &C,

@@ -1,36 +1,41 @@
 use crate::{
     methods::{
+        complementarity::{ComplementaritySolver, psor::Psor},
         constraints::Constraint,
-        finite_difference::{free_boundary::FreeBoundaryStrategy, meshers::Mesher1d},
-        linear_operators_old::LinearOperator,
+        finite_difference::meshers::Mesher1d,
+        linear_operators::LinearOperator,
+        linear_operators::tridiagonal_operator::TridiagonalOperator,
+        obstacle_policies::ObstaclePolicy,
     },
     types::Real,
 };
 
-pub struct ProjectionConstrained<C> {
+pub struct PsorObstaclePolicy<C> {
     pub constraint: C,
+    pub psor: Psor,
 }
-impl<T: Real, M: Mesher1d<T>, L: LinearOperator<T, M>, C: Constraint<T, M>>
-    FreeBoundaryStrategy<T, M, L> for ProjectionConstrained<C>
+
+impl<T: Real, M: Mesher1d<T>, C: Constraint<T, M>> ObstaclePolicy<T, M, TridiagonalOperator<T>>
+    for PsorObstaclePolicy<C>
 {
     fn solve_stage(
         &self,
-        op: &L,
-        b_in_ax_equals_b: &[T],
+        op: &TridiagonalOperator<T>,
+        b: &[T],
         coeff: T,
-        t: T,
-        mesh: &M,
+        _t: T,
+        m: &M,
         dest: &mut [T],
-        z: &mut [T],
+        _z: &mut [T],
     ) {
-        op.solve_inverse_into(b_in_ax_equals_b, coeff, t, dest, z);
+        self.psor.solve(op, b, coeff, &self.constraint, m, dest);
 
-        self.constraint.apply(dest, mesh);
+        //op.solve_psor_into(b, coeff, &self.constraint, m, dest, z);
     }
 
     fn compute_stage_derivative<IC>(
         &self,
-        operator: &L,
+        operator: &TridiagonalOperator<T>,
         stage_slice: &[T],
         next_t: T,
         mesher: &M,
@@ -45,8 +50,6 @@ impl<T: Real, M: Mesher1d<T>, L: LinearOperator<T, M>, C: Constraint<T, M>>
             let s = mesher.location(j);
             let payoff = initial_conditions.get_value(s);
 
-            // If we are at or below the payoff (for a Put) or above (for a Call),
-            // the value is 'pinned', so the time derivative f(y) effectively becomes 0.
             if stage_slice[j] <= payoff + T::from_f64(f64::EPSILON) {
                 l_stage_slice[j] = T::zero();
             }

@@ -5,7 +5,7 @@ use qox::instruments::stock_option::StockOption;
 use qox::market::{
     market_frame::OptionMarketFrame, rate_curve::ContinuousRateCurve, vol_surface::FlatVolSurface,
 };
-use qox::methods::finite_difference::solver::FdmConfig;
+use qox::methods::finite_difference::solver_old::FdmConfig;
 use qox::traits::pricing_engine::OptionEvaluable;
 use qox::types::Real;
 use std::time::Instant;
