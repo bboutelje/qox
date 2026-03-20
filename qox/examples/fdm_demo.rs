@@ -1,7 +1,7 @@
 use chrono::{Duration, Utc};
 use qox::evaluators::black_scholes::finite_difference::evaluator::Evaluator;
 use qox::instruments::OptionType;
-use qox::instruments::stock_option::StockOption;
+use qox::instruments::stock_option::{ExerciseStyle, StockOption};
 use qox::market::{
     market_frame::OptionMarketFrame, rate_curve::ContinuousRateCurve, vol_surface::FlatVolSurface,
 };
@@ -36,7 +36,12 @@ pub fn main() {
         },
     };
 
-    let option = StockOption::new(100.0, Utc::now() + Duration::days(365), OptionType::Call);
+    let option = StockOption::new(
+        100.0,
+        Utc::now() + Duration::days(365),
+        OptionType::Call,
+        ExerciseStyle::American,
+    );
 
     let start = Instant::now();
 

@@ -10,7 +10,12 @@ use qox::{
 use std::time::Instant;
 
 pub fn main() {
-    let stock_option = StockOption::new(100.0, Utc::now() + Duration::days(365), OptionType::Put);
+    let stock_option = StockOption::new(
+        100.0,
+        Utc::now() + Duration::days(365),
+        OptionType::Put,
+        qox::instruments::stock_option::ExerciseStyle::American,
+    );
 
     let spot = 95.0;
     let rate = 0.05;

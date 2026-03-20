@@ -4,7 +4,8 @@ use crate::{
         linear_operators_old::LinearOperator,
         time_stepping::{
             TimeStepper,
-            glm::{GlmWorkspace, InputVector},
+            glm::GlmWorkspace,
+            input_vectors::{InputVector, nordsieck_vector::NordsieckVector},
         },
         transforms::Transform,
     },
@@ -39,7 +40,7 @@ impl Solver {
         T: Real,
         Tr: Transform<T> + Copy,
         M: Mesher1d<T>,
-        Step: TimeStepper<T, S, R>,
+        Step: TimeStepper<T, NordsieckVector<T>, S, R>,
         P: FdmProcess<T, L, M, Tr>,
         L: LinearOperator<T, M>,
         IC: InitialConditions<T> + Copy,
@@ -47,7 +48,7 @@ impl Solver {
     {
         let operator = process.build_operator(&mesher);
 
-        let mut vector = InputVector::<T>::new(R, config.nodes, T::zero());
+        let mut vector = NordsieckVector::<T>::new(R, config.nodes, T::zero());
         let mut workspace = GlmWorkspace::<T>::new(S, config.nodes);
 
         let initial_v = self.initialize_payoff(initial_conditions, &mesher);

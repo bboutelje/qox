@@ -20,10 +20,10 @@ impl<T: Real, M: Mesher1d<T>, C: Constraint<T, M>> ObstaclePolicy<T, M, Tridiago
         op: &TridiagonalOperator<T>,
         b: &[T],
         coeff: T,
-        t: T,
+        _t: T,
         mesh: &M,
         dest: &mut [T],
-        z: &mut [T],
+        _z: &mut [T],
     ) {
         BrennanSchwartz::new().solve(op, b, coeff, &self.constraint, mesh, dest);
     }

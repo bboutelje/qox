@@ -1,7 +1,8 @@
 use crate::{
     methods::time_stepping::{
         TimeStepper,
-        glm::{GlmTableau, GlmWorkspace, InputVector},
+        glm::{GlmTableau, GlmWorkspace},
+        input_vectors::{InputVector, nordsieck_vector::NordsieckVector},
     },
     types::Real,
 };
@@ -20,22 +21,17 @@ impl<T: Real> Sdirk22<T> {
 
         Self {
             tableau: GlmTableau {
-                // A: [[gamma, 0], [1-2*gamma, gamma]]
                 a: [[gamma, zero], [a21, gamma]],
-                // U: [[1], [1]] -> Both stages start from y_n
                 u: [[one], [one]],
-                // B: [[1-gamma, gamma]] -> Combination for y_{n+1}
                 b: [[one - gamma, gamma]],
-                // V: [[1]] -> History update
                 v: [[one]],
-                // C: [gamma, 1] -> Stage times
                 c: [gamma, one],
             },
         }
     }
 }
 
-impl<T: Real> TimeStepper<T, 2, 1> for Sdirk22<T> {
+impl<T: Real> TimeStepper<T, NordsieckVector<T>, 2, 1> for Sdirk22<T> {
     fn tableau(&self) -> &GlmTableau<T, 2, 1> {
         &self.tableau
     }
@@ -43,9 +39,9 @@ impl<T: Real> TimeStepper<T, 2, 1> for Sdirk22<T> {
     fn prepare_stage_rhs(
         &self,
         stage_idx: usize,
-        state: &InputVector<T>,
+        state: &NordsieckVector<T>,
         _stages: &[T],
-        l_stages: &[T], // This is key for SDIRK
+        l_stages: &[T],
         dt: T,
         rhs_out: &mut [T],
     ) {
@@ -66,18 +62,15 @@ impl<T: Real> TimeStepper<T, 2, 1> for Sdirk22<T> {
         }
     }
 
-    // Remove 'mut' from 'ws'
-    fn finalize_step(&self, state: &mut InputVector<T>, ws: &GlmWorkspace<T>, dt: T) {
+    fn finalize_step(&self, state: &mut NordsieckVector<T>, ws: &GlmWorkspace<T>, dt: T) {
         let n = state.n;
 
-        // These are immutable borrows of the workspace buffers
         let l_y1 = &ws.l_stages[0..n];
         let l_y2 = &ws.l_stages[n..2 * n];
 
         let b1 = self.tableau.b[0][0];
         let b2 = self.tableau.b[0][1];
 
-        // Update state.items in place
         for i in 0..n {
             state.items[i] = state.items[i] + dt * (b1 * l_y1[i] + b2 * l_y2[i]);
         }

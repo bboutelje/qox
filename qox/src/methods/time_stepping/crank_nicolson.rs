@@ -1,7 +1,8 @@
 use crate::{
     methods::time_stepping::{
         TimeStepper,
-        glm::{GlmTableau, GlmWorkspace, InputVector},
+        glm::{GlmTableau, GlmWorkspace},
+        input_vectors::nordsieck_vector::NordsieckVector,
     },
     types::{Real, complex::ComplexWrapper},
 };
@@ -36,7 +37,7 @@ impl<T: Real> CrankNicolson<T> {
     }
 }
 
-impl<T: Real> TimeStepper<T, 1, 2> for CrankNicolson<T> {
+impl<T: Real> TimeStepper<T, NordsieckVector<T>, 1, 2> for CrankNicolson<T> {
     fn tableau(&self) -> &GlmTableau<T, 1, 2> {
         &self.tableau
     }
@@ -44,7 +45,7 @@ impl<T: Real> TimeStepper<T, 1, 2> for CrankNicolson<T> {
     fn prepare_stage_rhs(
         &self,
         _stage_idx: usize, // stage_idx is always 0 for s=1
-        vector: &InputVector<T>,
+        vector: &NordsieckVector<T>,
         _stages: &[T],
         _l_stages: &[T],
         dt: T,
@@ -64,7 +65,7 @@ impl<T: Real> TimeStepper<T, 1, 2> for CrankNicolson<T> {
         }
     }
 
-    fn finalize_step(&self, vector: &mut InputVector<T>, ws: &GlmWorkspace<T>, dt: T) {
+    fn finalize_step(&self, vector: &mut NordsieckVector<T>, ws: &GlmWorkspace<T>, dt: T) {
         let n = vector.n;
 
         let l_y1 = &ws.l_stages[0..n]; // f(Y1)
@@ -120,7 +121,7 @@ mod tests {
 
             // 1. Fix InputVector::new: Needs (r, n, current_time)
             // r=2 (from Dimsim2<T, 2, 2>), n=1 (scalar problem), t=0.0
-            let mut vector = InputVector::<f64>::new(2, 1, 0.0);
+            let mut vector = NordsieckVector::<f64>::new(2, 1, 0.0);
 
             // Initial conditions
             let y0 = 1.0;
@@ -164,7 +165,7 @@ mod tests {
 fn stability_function(method: &CrankNicolson<ComplexWrapper>, z: ComplexWrapper) -> ComplexWrapper {
     // Dimsim2 uses R=2, N=1
     let mut vector =
-        InputVector::<ComplexWrapper>::new(2, 1, ComplexWrapper(Complex::new(0.0, 0.0)));
+        NordsieckVector::<ComplexWrapper>::new(2, 1, ComplexWrapper(Complex::new(0.0, 0.0)));
 
     // vector.items needs to hold y_n and f(y_n)
     vector.items[0] = ComplexWrapper(Complex::new(1.0, 0.0));

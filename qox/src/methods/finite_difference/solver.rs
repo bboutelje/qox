@@ -5,7 +5,8 @@ use crate::{
         obstacle_policies::ObstaclePolicy,
         time_stepping::{
             TimeStepper,
-            glm::{GlmWorkspace, InputVector},
+            glm::GlmWorkspace,
+            input_vectors::{InputVector, nordsieck_vector::NordsieckVector},
         },
         transforms::Transform,
     },
@@ -30,17 +31,16 @@ impl Solver {
         process: P,
         stepper: Step,
         initial_conditions: IC,
-        mesher: M,
+        mesher: &M,
         dt: T,
         config: FdmConfig,
-        spot: T,
         obstacle_policy: OP,
-    ) -> T
+    ) -> NordsieckVector<T>
     where
         T: Real,
         Tr: Transform<T> + Copy,
         M: Mesher1d<T>,
-        Step: TimeStepper<T, S, R>,
+        Step: TimeStepper<T, NordsieckVector<T>, S, R>,
         P: FdmProcess<T, L, M, Tr>,
         L: LinearOperator<T>,
         IC: InitialConditions<T> + Copy,
@@ -48,10 +48,10 @@ impl Solver {
     {
         let operator = process.build_operator(&mesher);
 
-        let mut vector = InputVector::<T>::new(R, config.nodes, T::zero());
+        let mut vector = NordsieckVector::<T>::new(R, config.nodes, T::zero());
         let mut workspace = GlmWorkspace::<T>::new(S, config.nodes);
 
-        let initial_v = self.initialize_payoff(initial_conditions, &mesher);
+        let initial_v = self.initialize_payoff(initial_conditions, mesher);
 
         vector.step_slice_mut(0).copy_from_slice(&initial_v);
 
@@ -121,7 +121,8 @@ impl Solver {
             // }
         }
 
-        self.interpolate(&mesher, vector.step_slice(0), spot)
+        vector
+        //self.interpolate(&mesher, vector.step_slice(0), spot)
     }
 
     fn initialize_payoff<T, IC, M>(&self, initial_condition: IC, mesher: &M) -> Vec<T>
@@ -138,7 +139,7 @@ impl Solver {
             .collect()
     }
 
-    fn interpolate<T, M>(&self, mesher: &M, v: &[T], spot: T) -> T
+    pub fn interpolate<T, M>(&self, mesher: &M, v: &[T], spot: T) -> T
     where
         T: Real,
         M: Mesher1d<T>,

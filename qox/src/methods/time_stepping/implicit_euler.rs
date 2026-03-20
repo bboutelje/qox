@@ -1,10 +1,12 @@
 use crate::{
     methods::time_stepping::{
         TimeStepper,
-        glm::{GlmTableau, GlmWorkspace, InputVector},
+        glm::{GlmTableau, GlmWorkspace},
+        input_vectors::{InputVector, nordsieck_vector::NordsieckVector},
     },
     types::Real,
 };
+
 pub struct ImplicitEuler<T: Real> {
     tableau: GlmTableau<T, 1, 1>,
 }
@@ -23,7 +25,7 @@ impl<T: Real> ImplicitEuler<T> {
         }
     }
 }
-impl<T: Real> TimeStepper<T, 1, 1> for ImplicitEuler<T> {
+impl<T: Real> TimeStepper<T, NordsieckVector<T>, 1, 1> for ImplicitEuler<T> {
     fn tableau(&self) -> &GlmTableau<T, 1, 1> {
         &self.tableau
     }
@@ -31,7 +33,7 @@ impl<T: Real> TimeStepper<T, 1, 1> for ImplicitEuler<T> {
     fn prepare_stage_rhs(
         &self,
         _stage_idx: usize,
-        state: &InputVector<T>,
+        state: &NordsieckVector<T>,
         _stages: &[T],
         _l_stages: &[T],
         _dt: T,
@@ -40,7 +42,7 @@ impl<T: Real> TimeStepper<T, 1, 1> for ImplicitEuler<T> {
         rhs_out.copy_from_slice(state.step_slice(0));
     }
 
-    fn finalize_step(&self, state: &mut InputVector<T>, ws: &GlmWorkspace<T>, _dt: T) {
+    fn finalize_step(&self, state: &mut NordsieckVector<T>, ws: &GlmWorkspace<T>, _dt: T) {
         // Move the computed stage 0 from workspace back to state items
         // We use the first N elements of ws.stages (which represents stage 0)
         let n = state.n;

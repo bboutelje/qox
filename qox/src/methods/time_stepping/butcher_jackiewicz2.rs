@@ -3,7 +3,8 @@ use nalgebra::Complex;
 use crate::{
     methods::time_stepping::{
         TimeStepper,
-        glm::{GlmTableau, GlmWorkspace, InputVector},
+        glm::{GlmTableau, GlmWorkspace},
+        input_vectors::nordsieck_vector::NordsieckVector,
     },
     types::{Real, complex::ComplexWrapper},
 };
@@ -41,7 +42,7 @@ impl<T: Real> ButcherJackiewicz2<T> {
     }
 }
 
-impl<T: Real> TimeStepper<T, 2, 2> for ButcherJackiewicz2<T> {
+impl<T: Real> TimeStepper<T, NordsieckVector<T>, 2, 2> for ButcherJackiewicz2<T> {
     fn tableau(&self) -> &GlmTableau<T, 2, 2> {
         &self.tableau
     }
@@ -49,7 +50,7 @@ impl<T: Real> TimeStepper<T, 2, 2> for ButcherJackiewicz2<T> {
     fn prepare_stage_rhs(
         &self,
         stage_idx: usize,
-        state: &InputVector<T>,
+        state: &NordsieckVector<T>,
         _stages: &[T],
         l_stages: &[T],
         dt: T,
@@ -85,7 +86,7 @@ impl<T: Real> TimeStepper<T, 2, 2> for ButcherJackiewicz2<T> {
         }
     }
 
-    fn finalize_step(&self, state: &mut InputVector<T>, ws: &GlmWorkspace<T>, dt: T) {
+    fn finalize_step(&self, state: &mut NordsieckVector<T>, ws: &GlmWorkspace<T>, dt: T) {
         let n = state.n;
 
         let l_y1 = &ws.l_stages[0..n];
@@ -120,7 +121,7 @@ mod tests {
     }
 
     #[test]
-    fn ButcherJackiewicz2_convergence_order() {
+    fn butcher_jackiewicz2_convergence_order() {
         let method = ButcherJackiewicz2::<f64>::new();
 
         let t_final = 1.0;
@@ -134,7 +135,7 @@ mod tests {
 
             // 1. Fix InputVector::new: Needs (r, n, current_time)
             // r=2 (from ButcherJackiewicz2<T, 2, 2>), n=1 (scalar problem), t=0.0
-            let mut state = InputVector::<f64>::new(2, 1, 0.0);
+            let mut state = NordsieckVector::<f64>::new(2, 1, 0.0);
 
             // Initial conditions
             let y0 = 1.0;
@@ -147,7 +148,7 @@ mod tests {
 
             for _ in 0..n_steps {
                 // Note: GLM step now updates state.current_time internally
-                // inside the test loop in ButcherJackiewicz2.rs
+                // inside the test loop in butcher_jackiewicz2.rs
                 crate::methods::time_stepping::glm::step(
                     &method,
                     &mut state,
@@ -181,7 +182,7 @@ fn stability_function(
 ) -> ComplexWrapper {
     // ButcherJackiewicz2 uses R=2, N=1
     let mut state =
-        InputVector::<ComplexWrapper>::new(2, 1, ComplexWrapper(Complex::new(0.0, 0.0)));
+        NordsieckVector::<ComplexWrapper>::new(2, 1, ComplexWrapper(Complex::new(0.0, 0.0)));
 
     // state.items needs to hold y_n and f(y_n)
     state.items[0] = ComplexWrapper(Complex::new(1.0, 0.0));

@@ -2,7 +2,7 @@ use crate::market::market_frame::PyOptionMarketFrame;
 use chrono::{DateTime, Utc};
 use pyo3::prelude::*;
 use qox::evaluators::black_scholes::finite_difference::VanillaPayoff;
-use qox::instruments::stock_option::StockOption;
+use qox::instruments::stock_option::{ExerciseStyle, StockOption};
 use qox::instruments::{OptionInstrument, OptionType};
 
 #[pyclass(name = "StockOption")]
@@ -14,7 +14,12 @@ pub struct PyStockOption {
 #[pymethods]
 impl PyStockOption {
     #[new]
-    pub fn new(strike: f64, expiry: DateTime<Utc>, option_type_str: &str) -> PyResult<Self> {
+    pub fn new(
+        strike: f64,
+        expiry: DateTime<Utc>,
+        option_type_str: &str,
+        exercise_style_str: &str,
+    ) -> PyResult<Self> {
         let option_type = match option_type_str.to_lowercase().as_str() {
             "call" => OptionType::Call,
             "put" => OptionType::Put,
@@ -25,8 +30,18 @@ impl PyStockOption {
             }
         };
 
+        let exercise_style = match exercise_style_str.to_lowercase().as_str() {
+            "american" => ExerciseStyle::American,
+            "european" => ExerciseStyle::European,
+            _ => {
+                return Err(pyo3::exceptions::PyValueError::new_err(
+                    "Invalid exericse style",
+                ));
+            }
+        };
+
         Ok(PyStockOption {
-            inner: StockOption::new(strike, expiry, option_type),
+            inner: StockOption::new(strike, expiry, option_type, exercise_style),
         })
     }
 

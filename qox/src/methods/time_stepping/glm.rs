@@ -1,4 +1,7 @@
-use crate::{methods::time_stepping::TimeStepper, types::Real};
+use crate::{
+    methods::time_stepping::{TimeStepper, input_vectors::InputVector},
+    types::Real,
+};
 
 pub struct GlmTableau<T, const S: usize, const R: usize> {
     pub a: [[T; S]; S],
@@ -8,35 +11,35 @@ pub struct GlmTableau<T, const S: usize, const R: usize> {
     pub c: [T; S],
 }
 
-pub struct InputVector<T> {
-    pub items: Vec<T>,
-    pub r: usize,
-    pub n: usize,
-    pub current_time: T,
-}
+// pub struct InputVector<T> {
+//     pub items: Vec<T>,
+//     pub r: usize,
+//     pub n: usize,
+//     pub current_time: T,
+// }
 
-impl<T: Real> InputVector<T> {
-    pub fn new(r: usize, n: usize, current_time: T) -> Self {
-        Self {
-            items: vec![T::zero(); r * n],
-            r,
-            n,
-            current_time,
-        }
-    }
+// impl<T: Real> InputVector<T> {
+//     pub fn new(r: usize, n: usize, current_time: T) -> Self {
+//         Self {
+//             items: vec![T::zero(); r * n],
+//             r,
+//             n,
+//             current_time,
+//         }
+//     }
 
-    #[inline(always)]
-    pub fn step_slice(&self, j: usize) -> &[T] {
-        let start = j * self.n;
-        &self.items[start..start + self.n]
-    }
+//     #[inline(always)]
+//     pub fn step_slice(&self, j: usize) -> &[T] {
+//         let start = j * self.n;
+//         &self.items[start..start + self.n]
+//     }
 
-    #[inline(always)]
-    pub fn step_slice_mut(&mut self, j: usize) -> &mut [T] {
-        let start = j * self.n;
-        &mut self.items[start..start + self.n]
-    }
-}
+//     #[inline(always)]
+//     pub fn step_slice_mut(&mut self, j: usize) -> &mut [T] {
+//         let start = j * self.n;
+//         &mut self.items[start..start + self.n]
+//     }
+// }
 
 pub struct GlmWorkspace<T> {
     pub stages: Vec<T>,
@@ -57,9 +60,9 @@ impl<T: Real> GlmWorkspace<T> {
     }
 }
 
-pub fn step<T, const S: usize, const R: usize, F>(
-    method: &impl TimeStepper<T, S, R>,
-    state: &mut InputVector<T>,
+pub fn step<T, IV: InputVector<T>, const S: usize, const R: usize, F>(
+    method: &impl TimeStepper<T, IV, S, R>,
+    state: &mut IV,
     ws: &mut GlmWorkspace<T>,
     dt: T,
     mut f: F,
@@ -67,7 +70,7 @@ pub fn step<T, const S: usize, const R: usize, F>(
     T: Real,
     F: FnMut(&[T], &mut [T]),
 {
-    let n = state.n;
+    let n = state.n();
 
     for i in 0..S {
         // 1. Let the method handle U and A contributions for this stage
@@ -98,19 +101,19 @@ pub fn step<T, const S: usize, const R: usize, F>(
     method.finalize_step(state, ws, dt);
 
     // 5. Advance time
-    state.current_time = state.current_time + dt;
+    state.set_current_time(state.get_current_time() + dt);
 }
 
-pub fn step_for_stability<T, const S: usize, const R: usize>(
-    method: &impl TimeStepper<T, S, R>,
-    state: &mut InputVector<T>,
+pub fn step_for_stability<T, IV: InputVector<T>, const S: usize, const R: usize>(
+    method: &impl TimeStepper<T, IV, S, R>,
+    state: &mut IV,
     ws: &mut GlmWorkspace<T>,
     dt: T,
     z: T, // Pass the stability parameter z directly
 ) where
     T: Real,
 {
-    let n = state.n;
+    let n = state.n();
 
     for i in 0..S {
         // 1. Prepare RHS (U and A contributions)
@@ -134,9 +137,8 @@ pub fn step_for_stability<T, const S: usize, const R: usize>(
         }
     }
 
-    // 4. Update state.items
     method.finalize_step(state, ws, dt);
-    state.current_time = state.current_time + dt;
+    state.set_current_time(state.get_current_time() + dt);
 }
 
 // impl<T: Real> InputVector<T> {

@@ -11,6 +11,7 @@ use crate::methods::obstacle_policies::brennan_schwartz::BrennanSchwartzPolicy;
 use crate::methods::obstacle_policies::no_obstacle::NoObstaclePolicy;
 use crate::methods::obstacle_policies::post_projection::PostProjectionPolicy;
 use crate::methods::time_stepping::butcher_jackiewicz2::ButcherJackiewicz2;
+use crate::methods::time_stepping::input_vectors::InputVector;
 use crate::methods::transforms::log::LogTransform;
 use crate::processes::black_scholes::BlackScholesProcess;
 use crate::traits::rate_curve::RateCurve;
@@ -23,19 +24,32 @@ use crate::{
 };
 use chrono::{DateTime, Utc};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ExerciseStyle {
+    American,
+    European,
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct StockOption {
     pub strike: f64,
     pub expiry: DateTime<Utc>,
     pub option_type: OptionType,
+    pub exercise_style: ExerciseStyle,
 }
 
 impl StockOption {
-    pub fn new(strike: f64, expiry: DateTime<Utc>, option_type: OptionType) -> Self {
+    pub fn new(
+        strike: f64,
+        expiry: DateTime<Utc>,
+        option_type: OptionType,
+        exercise_style: ExerciseStyle,
+    ) -> Self {
         Self {
-            strike: strike,
+            strike,
             expiry,
             option_type,
+            exercise_style,
         }
     }
 }
@@ -72,7 +86,7 @@ impl<T: Real> OptionInstrument<T, VanillaPayoff> for StockOption {
         let solver = Solver {
             config: FdmConfig {
                 nodes: 1000,
-                time_steps: 12,
+                time_steps: 11,
             },
         };
 
@@ -96,17 +110,19 @@ impl<T: Real> OptionInstrument<T, VanillaPayoff> for StockOption {
             constraint: AmericanConstraint::new(initial_conditions),
         };
 
-        solver.solve(
+        let vector = solver.solve(
             process,
             stepper,
             initial_conditions,
-            mesher,
+            &mesher,
             dt,
             solver.config,
-            market_frame.spot_price(),
+            //market_frame.spot_price(),
             //NoObstaclePolicy,
             obstacle_policy,
-        )
+        );
+
+        solver.interpolate(&mesher, vector.step_slice(0), market_frame.spot_price())
     }
 
     fn get_payoff(self) -> VanillaPayoff {

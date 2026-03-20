@@ -1,7 +1,7 @@
 use crate::{
     methods::{
-        constraints::Constraint, finite_difference::meshers::Mesher1d,
-        linear_operators::LinearOperator, obstacle_policies::ObstaclePolicy,
+        finite_difference::meshers::Mesher1d, linear_operators::LinearOperator,
+        obstacle_policies::ObstaclePolicy,
     },
     types::Real,
 };
@@ -17,8 +17,8 @@ impl<T: Real, M: Mesher1d<T>, L: LinearOperator<T>> ObstaclePolicy<T, M, L> for 
         operator: &L,
         stage_slice: &[T],
         next_t: T,
-        mesher: &M,
-        initial_conditions: IC,
+        _mesher: &M,
+        _initial_conditions: IC,
         l_stage_slice: &mut [T],
     ) where
         IC: crate::traits::payoff::InitialConditions<T> + Copy,

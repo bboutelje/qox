@@ -6,7 +6,8 @@ use crate::methods::finite_difference::solver_old::FdmConfig;
 //use std::time::Instant;
 use crate::methods::linear_operators_old::LinearOperator;
 use crate::methods::time_stepping::TimeStepper;
-use crate::methods::time_stepping::glm::InputVector;
+use crate::methods::time_stepping::input_vectors::InputVector;
+use crate::methods::time_stepping::input_vectors::nordsieck_vector::NordsieckVector;
 use crate::types::Real;
 use crate::{methods::time_stepping::glm::GlmWorkspace, traits::payoff::InitialConditions};
 
@@ -27,7 +28,7 @@ impl Solver {
     where
         T: Real,
         IC: InitialConditions<T> + Copy,
-        Step: TimeStepper<T, S, R>,
+        Step: TimeStepper<T, NordsieckVector<T>, S, R>,
     {
         let zero = T::zero();
 
@@ -48,7 +49,7 @@ impl Solver {
             cache: std::cell::RefCell::new(None),
         };
 
-        let mut state = InputVector::<T>::new(R, self.config.nodes, zero);
+        let mut state = NordsieckVector::<T>::new(R, self.config.nodes, zero);
         let mut workspace = GlmWorkspace::<T>::new(S, self.config.nodes);
 
         let initial_v = self.initialize_payoff(initial_condition, &mesher);
