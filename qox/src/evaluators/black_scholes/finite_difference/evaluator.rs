@@ -4,7 +4,7 @@ use crate::methods::finite_difference::meshers::uniform::UniformMesher1d;
 use crate::methods::finite_difference::solver_old::FdmConfig;
 use crate::methods::finite_difference::solver_old_old::Solver;
 
-use crate::methods::time_stepping::dimsim2::Dimsim2;
+use crate::methods::time_stepping::butcher_jackiewicz2::ButcherJackiewicz2;
 use crate::methods::transforms::log::LogTransform;
 use crate::processes_old::black_scholes::BlackScholesProcess;
 use crate::traits::payoff::{Payoff, PayoffAsInitialConditions};
@@ -39,7 +39,7 @@ where
 
         let initial_condition = PayoffAsInitialConditions::new(instrument.get_payoff());
 
-        let stepper = Dimsim2::new();
+        let stepper = ButcherJackiewicz2::new();
         let transform = LogTransform::new();
         let s_min = T::from_f64(0.01);
         let s_max = market.spot_price * T::from_f64(5.0);

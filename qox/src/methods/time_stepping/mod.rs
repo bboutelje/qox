@@ -1,6 +1,6 @@
 pub mod bdf2;
+pub mod butcher_jackiewicz2;
 pub mod crank_nicolson;
-pub mod dimsim2;
 pub mod glm;
 pub mod implicit_euler;
 pub mod sdirk22;

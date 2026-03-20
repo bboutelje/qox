@@ -8,11 +8,11 @@ use crate::{
     types::{Real, complex::ComplexWrapper},
 };
 
-pub struct Dimsim2<T: Real> {
+pub struct ButcherJackiewicz2<T: Real> {
     tableau: GlmTableau<T, 2, 2>,
 }
 
-impl<T: Real> Dimsim2<T> {
+impl<T: Real> ButcherJackiewicz2<T> {
     pub fn new() -> Self {
         let zero = T::zero();
         let one = T::one();
@@ -41,7 +41,7 @@ impl<T: Real> Dimsim2<T> {
     }
 }
 
-impl<T: Real> TimeStepper<T, 2, 2> for Dimsim2<T> {
+impl<T: Real> TimeStepper<T, 2, 2> for ButcherJackiewicz2<T> {
     fn tableau(&self) -> &GlmTableau<T, 2, 2> {
         &self.tableau
     }
@@ -120,8 +120,8 @@ mod tests {
     }
 
     #[test]
-    fn dimsim2_convergence_order() {
-        let method = Dimsim2::<f64>::new();
+    fn ButcherJackiewicz2_convergence_order() {
+        let method = ButcherJackiewicz2::<f64>::new();
 
         let t_final = 1.0;
         let exact = exact_solution(t_final);
@@ -133,13 +133,13 @@ mod tests {
             let dt = t_final / n_steps as f64;
 
             // 1. Fix InputVector::new: Needs (r, n, current_time)
-            // r=2 (from Dimsim2<T, 2, 2>), n=1 (scalar problem), t=0.0
+            // r=2 (from ButcherJackiewicz2<T, 2, 2>), n=1 (scalar problem), t=0.0
             let mut state = InputVector::<f64>::new(2, 1, 0.0);
 
             // Initial conditions
             let y0 = 1.0;
             state.items[0] = y0; // y_n
-            state.items[1] = f(y0); // f(y_n) (The second history item for DIMSIM2)
+            state.items[1] = f(y0); // f(y_n) (The second history item for ButcherJackiewicz2)
 
             // 2. Fix GlmWorkspace::new: Needs (s, n)
             // s=2 (stages), n=1 (nodes)
@@ -147,7 +147,7 @@ mod tests {
 
             for _ in 0..n_steps {
                 // Note: GLM step now updates state.current_time internally
-                // inside the test loop in dimsim2.rs
+                // inside the test loop in ButcherJackiewicz2.rs
                 crate::methods::time_stepping::glm::step(
                     &method,
                     &mut state,
@@ -175,8 +175,11 @@ mod tests {
 }
 
 #[allow(dead_code)]
-fn stability_function(method: &Dimsim2<ComplexWrapper>, z: ComplexWrapper) -> ComplexWrapper {
-    // Dimsim2 uses R=2, N=1
+fn stability_function(
+    method: &ButcherJackiewicz2<ComplexWrapper>,
+    z: ComplexWrapper,
+) -> ComplexWrapper {
+    // ButcherJackiewicz2 uses R=2, N=1
     let mut state =
         InputVector::<ComplexWrapper>::new(2, 1, ComplexWrapper(Complex::new(0.0, 0.0)));
 
@@ -184,7 +187,7 @@ fn stability_function(method: &Dimsim2<ComplexWrapper>, z: ComplexWrapper) -> Co
     state.items[0] = ComplexWrapper(Complex::new(1.0, 0.0));
     state.items[1] = z; // f(y) = z*y => f(1) = z
 
-    // Dimsim2 uses S=2, N=1
+    // ButcherJackiewicz2 uses S=2, N=1
     let mut ws = GlmWorkspace::<ComplexWrapper>::new(2, 1);
     let dt = ComplexWrapper(Complex::new(1.0, 0.0));
 
@@ -199,7 +202,7 @@ fn stability_function(method: &Dimsim2<ComplexWrapper>, z: ComplexWrapper) -> Co
 #[test]
 fn dimsim_a_stability_test() {
     // Use the wrapper here
-    let method = Dimsim2::<ComplexWrapper>::new();
+    let method = ButcherJackiewicz2::<ComplexWrapper>::new();
 
     for re in (-100..0).map(|x| x as f64 * 0.1) {
         for im in (-50..50).map(|x| x as f64 * 0.1) {

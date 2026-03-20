@@ -1,4 +1,5 @@
 use crate::instruments::{Instrument, OptionInstrument, OptionType};
+use crate::methods::complementarity::brennan_schwartz::BrennanSchwartz;
 use crate::methods::constraints::american::AmericanConstraint;
 use crate::methods::finite_difference::free_boundary::projection::ProjectionConstrained;
 
@@ -6,9 +7,10 @@ use crate::methods::finite_difference::free_boundary::unconstrained::Unconstrain
 use crate::methods::finite_difference::meshers::uniform::UniformMesher1d;
 use crate::methods::finite_difference::solver::{FdmConfig, Solver};
 use crate::methods::obstacle_policies::ObstaclePolicy;
+use crate::methods::obstacle_policies::brennan_schwartz::BrennanSchwartzPolicy;
 use crate::methods::obstacle_policies::no_obstacle::NoObstaclePolicy;
 use crate::methods::obstacle_policies::post_projection::PostProjectionPolicy;
-use crate::methods::time_stepping::dimsim2::Dimsim2;
+use crate::methods::time_stepping::butcher_jackiewicz2::ButcherJackiewicz2;
 use crate::methods::transforms::log::LogTransform;
 use crate::processes::black_scholes::BlackScholesProcess;
 use crate::traits::rate_curve::RateCurve;
@@ -70,7 +72,7 @@ impl<T: Real> OptionInstrument<T, VanillaPayoff> for StockOption {
         let solver = Solver {
             config: FdmConfig {
                 nodes: 1000,
-                time_steps: 20,
+                time_steps: 12,
             },
         };
 
@@ -88,10 +90,7 @@ impl<T: Real> OptionInstrument<T, VanillaPayoff> for StockOption {
         let mesher = UniformMesher1d::new(s_min.ln(), s_max.ln(), solver.config.nodes, transform);
 
         let process = BlackScholesProcess::new(rate, vol, transform);
-        let stepper = Dimsim2::new();
-        // let free_boundary_strategy = ProjectionConstrained {
-        //     constraint: AmericanConstraint::new(initial_conditions),
-        // };
+        let stepper = ButcherJackiewicz2::new();
 
         let obstacle_policy = PostProjectionPolicy {
             constraint: AmericanConstraint::new(initial_conditions),

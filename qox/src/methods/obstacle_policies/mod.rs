@@ -1,5 +1,6 @@
 use crate::traits::payoff::InitialConditions;
 
+pub mod brennan_schwartz;
 pub mod no_obstacle;
 pub mod post_projection;
 pub mod psor;
