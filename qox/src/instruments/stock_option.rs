@@ -2,7 +2,6 @@ use crate::instruments::{Instrument, OptionInstrument, OptionType};
 use crate::methods::complementarity::brennan_schwartz::BrennanSchwartz;
 use crate::methods::constraints::american::AmericanConstraint;
 use crate::methods::finite_difference::free_boundary::projection::ProjectionConstrained;
-
 use crate::methods::finite_difference::free_boundary::unconstrained::Unconstrained;
 use crate::methods::finite_difference::meshers::uniform::UniformMesher1d;
 use crate::methods::finite_difference::solver::{FdmConfig, Solver};
@@ -13,6 +12,7 @@ use crate::methods::obstacle_policies::post_projection::PostProjectionPolicy;
 use crate::methods::time_stepping::butcher_jackiewicz2::ButcherJackiewicz2;
 use crate::methods::time_stepping::input_vectors::InputVector;
 use crate::methods::transforms::log::LogTransform;
+use crate::processes::FdmProcess;
 use crate::processes::black_scholes::BlackScholesProcess;
 use crate::traits::rate_curve::RateCurve;
 use crate::traits::vol_surface::VolSurface;
@@ -110,19 +110,27 @@ impl<T: Real> OptionInstrument<T, VanillaPayoff> for StockOption {
             constraint: AmericanConstraint::new(initial_conditions),
         };
 
+        let operator = process.build_operator(&mesher);
+
         let vector = solver.solve(
-            process,
+            &operator,
             stepper,
             initial_conditions,
             &mesher,
             dt,
             solver.config,
             //market_frame.spot_price(),
-            //NoObstaclePolicy,
-            obstacle_policy,
+            NoObstaclePolicy,
+            //obstacle_policy,
         );
 
         solver.interpolate(&mesher, vector.step_slice(0), market_frame.spot_price())
+
+        // let scaled_time_deriv = vector.step_slice(1);
+
+        // let dv_dtau_scaled =
+        //     solver.interpolate(&mesher, scaled_time_deriv, market_frame.spot_price());
+        // -(dv_dtau_scaled)
     }
 
     fn get_payoff(self) -> VanillaPayoff {

@@ -26,9 +26,9 @@ pub struct FdmConfig {
 }
 
 impl Solver {
-    pub fn solve<T, Tr, L, M, P, Step, IC, OP, const S: usize, const R: usize>(
+    pub fn solve<T, L, M, Step, IC, OP, const S: usize, const R: usize>(
         &self,
-        process: P,
+        operator: &L,
         stepper: Step,
         initial_conditions: IC,
         mesher: &M,
@@ -38,16 +38,13 @@ impl Solver {
     ) -> NordsieckVector<T>
     where
         T: Real,
-        Tr: Transform<T> + Copy,
+        //Tr: Transform<T> + Copy,
         M: Mesher1d<T>,
         Step: TimeStepper<T, NordsieckVector<T>, S, R>,
-        P: FdmProcess<T, L, M, Tr>,
         L: LinearOperator<T>,
         IC: InitialConditions<T> + Copy,
         OP: ObstaclePolicy<T, M, L>,
     {
-        let operator = process.build_operator(&mesher);
-
         let mut vector = NordsieckVector::<T>::new(R, config.nodes, T::zero());
         let mut workspace = GlmWorkspace::<T>::new(S, config.nodes);
 
@@ -98,27 +95,10 @@ impl Solver {
                     initial_conditions,
                     l_stage_slice,
                 );
-                // operator.apply_into(stage_slice, next_t, l_stage_slice);
-
-                // for j in 0..n {
-                //     let s = mesher.location(j);
-                //     let payoff = initial_conditions.get_value(s);
-
-                //     // If we are at or below the payoff (for a Put) or above (for a Call),
-                //     // the value is 'pinned', so the time derivative f(y) effectively becomes 0.
-                //     if stage_slice[j] <= payoff + T::from_f64(f64::EPSILON) {
-                //         l_stage_slice[j] = T::zero();
-                //     }
-                // }
             }
 
             stepper.finalize_step(&mut vector, &workspace, dt);
             vector.current_time = next_t;
-
-            // if R > 1 {
-            //     let (y_slice, f_slice) = vector.items.split_at_mut(n);
-            //     operator.apply_into(y_slice, next_t, f_slice);
-            // }
         }
 
         vector

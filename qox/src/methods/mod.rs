@@ -1,3 +1,4 @@
+pub mod analytic;
 pub mod complementarity;
 pub mod constraints;
 pub mod finite_difference;

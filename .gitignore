@@ -3,6 +3,7 @@
 .venv/
 .zed/
 
+
 # Python compiled files (Every time you run your code, these appear)
 __pycache__/
 *.py[cod]
