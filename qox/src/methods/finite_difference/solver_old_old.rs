@@ -1,147 +1,145 @@
-use crate::methods::finite_difference::meshers::Mesher1d;
-use crate::methods::finite_difference::meshers::log::LogMesher1d;
-use crate::methods::finite_difference::meshers::uniform_old::UniformMesher1d;
-use crate::methods::finite_difference::operator_old::BsOperator;
-use crate::methods::finite_difference::solver_old::FdmConfig;
-//use std::time::Instant;
-use crate::methods::linear_operators_old::LinearOperator;
-use crate::methods::time_stepping::TimeStepper;
-use crate::methods::time_stepping::input_vectors::InputVector;
-use crate::methods::time_stepping::input_vectors::nordsieck_vector::NordsieckVector;
-use crate::types::Real;
-use crate::{methods::time_stepping::glm::GlmWorkspace, traits::payoff::InitialConditions};
+// use crate::methods::finite_difference::meshers::Mesher1d;
 
-pub struct Solver {
-    pub config: FdmConfig,
-}
+// use crate::methods::finite_difference::solver_old::FdmConfig;
+// //use std::time::Instant;
+// use crate::methods::linear_operators_old::LinearOperator;
+// use crate::methods::time_stepping::TimeStepper;
+// use crate::methods::time_stepping::input_vectors::InputVector;
+// use crate::methods::time_stepping::input_vectors::nordsieck_vector::NordsieckVector;
+// use crate::types::Real;
+// use crate::{methods::time_stepping::glm::GlmWorkspace, traits::payoff::InitialConditions};
 
-impl Solver {
-    pub fn solve<IC, T, Step, const S: usize, const R: usize>(
-        self,
-        stepper: Step,
-        initial_condition: IC,
-        years_to_expiry: T,
-        spot: T,
-        rate: T,
-        vol: T,
-    ) -> T
-    where
-        T: Real,
-        IC: InitialConditions<T> + Copy,
-        Step: TimeStepper<T, NordsieckVector<T>, S, R>,
-    {
-        let zero = T::zero();
+// pub struct Solver {
+//     pub config: FdmConfig,
+// }
 
-        let s_min = T::from_f64(0.01);
-        let s_max = spot * T::from_f64(5.0);
+// impl Solver {
+//     pub fn solve<IC, T, Step, const S: usize, const R: usize>(
+//         self,
+//         stepper: Step,
+//         initial_condition: IC,
+//         years_to_expiry: T,
+//         spot: T,
+//         rate: T,
+//         vol: T,
+//     ) -> T
+//     where
+//         T: Real,
+//         IC: InitialConditions<T> + Copy,
+//         Step: TimeStepper<T, NordsieckVector<T>, S, R>,
+//     {
+//         let zero = T::zero();
 
-        let mesher = LogMesher1d::new(UniformMesher1d::new(
-            s_min.ln(),
-            s_max.ln(),
-            self.config.nodes,
-        ));
-        let dt = years_to_expiry / T::from_f64(self.config.time_steps as f64);
+//         let s_min = T::from_f64(0.01);
+//         let s_max = spot * T::from_f64(5.0);
 
-        let operator = BsOperator {
-            mesher: &mesher,
-            r: rate.into(),
-            sigma: vol.into(),
-            cache: std::cell::RefCell::new(None),
-        };
+//         let mesher = LogMesher1d::new(UniformMesher1d::new(
+//             s_min.ln(),
+//             s_max.ln(),
+//             self.config.nodes,
+//         ));
+//         let dt = years_to_expiry / T::from_f64(self.config.time_steps as f64);
 
-        let mut state = NordsieckVector::<T>::new(R, self.config.nodes, zero);
-        let mut workspace = GlmWorkspace::<T>::new(S, self.config.nodes);
+//         let operator = BsOperator {
+//             mesher: &mesher,
+//             r: rate.into(),
+//             sigma: vol.into(),
+//             cache: std::cell::RefCell::new(None),
+//         };
 
-        let initial_v = self.initialize_payoff(initial_condition, &mesher);
-        state.step_slice_mut(0).copy_from_slice(&initial_v);
+//         let mut state = NordsieckVector::<T>::new(R, self.config.nodes, zero);
+//         let mut workspace = GlmWorkspace::<T>::new(S, self.config.nodes);
 
-        let n = self.config.nodes;
-        if R > 1 {
-            let (y_slice, f_slice) = state.items.split_at_mut(n);
-            operator.apply_into(y_slice, zero, f_slice);
-        }
+//         let initial_v = self.initialize_payoff(initial_condition, &mesher);
+//         state.step_slice_mut(0).copy_from_slice(&initial_v);
 
-        for _ in 0..self.config.time_steps {
-            let next_t = state.current_time + dt;
+//         let n = self.config.nodes;
+//         if R > 1 {
+//             let (y_slice, f_slice) = state.items.split_at_mut(n);
+//             operator.apply_into(y_slice, zero, f_slice);
+//         }
 
-            for i in 0..S {
-                stepper.prepare_stage_rhs(
-                    i,
-                    &state,
-                    &workspace.stages,
-                    &workspace.l_stages,
-                    dt,
-                    &mut workspace.rhs_buffer,
-                );
+//         for _ in 0..self.config.time_steps {
+//             let next_t = state.current_time + dt;
 
-                let stage_coeff = stepper.tableau().a[i][i] * dt;
-                operator.setup_coeff(stage_coeff);
+//             for i in 0..S {
+//                 stepper.prepare_stage_rhs(
+//                     i,
+//                     &state,
+//                     &workspace.stages,
+//                     &workspace.l_stages,
+//                     dt,
+//                     &mut workspace.rhs_buffer,
+//                 );
 
-                let stage_slice = &mut workspace.stages[i * n..(i + 1) * n];
+//                 let stage_coeff = stepper.tableau().a[i][i] * dt;
+//                 operator.setup_coeff(stage_coeff);
 
-                operator.solve_inverse_into(
-                    &workspace.rhs_buffer,
-                    stage_coeff,
-                    next_t,
-                    stage_slice,
-                    &mut workspace.z_buffer,
-                );
+//                 let stage_slice = &mut workspace.stages[i * n..(i + 1) * n];
 
-                let l_stage_slice = &mut workspace.l_stages[i * n..(i + 1) * n];
-                operator.apply_into(stage_slice, next_t, l_stage_slice);
-            }
+//                 operator.solve_inverse_into(
+//                     &workspace.rhs_buffer,
+//                     stage_coeff,
+//                     next_t,
+//                     stage_slice,
+//                     &mut workspace.z_buffer,
+//                 );
 
-            stepper.finalize_step(&mut state, &workspace, dt);
-            state.current_time = next_t;
-        }
+//                 let l_stage_slice = &mut workspace.l_stages[i * n..(i + 1) * n];
+//                 operator.apply_into(stage_slice, next_t, l_stage_slice);
+//             }
 
-        self.interpolate(&mesher, state.step_slice(0), spot.into())
-    }
-}
+//             stepper.finalize_step(&mut state, &workspace, dt);
+//             state.current_time = next_t;
+//         }
 
-impl Solver {
-    fn initialize_payoff<T, IC, M>(&self, initial_condition: IC, mesher: &M) -> Vec<T>
-    where
-        T: Real,
-        IC: InitialConditions<T> + Copy,
-        M: Mesher1d<T>,
-    {
-        (0..mesher.size())
-            .map(|i| {
-                let s = mesher.location(i);
-                initial_condition.get_value(s)
-            })
-            .collect()
-    }
+//         self.interpolate(&mesher, state.step_slice(0), spot.into())
+//     }
+// }
 
-    fn interpolate<T, M>(&self, mesher: &M, v: &[T], spot: T) -> T
-    where
-        T: Real,
-        M: Mesher1d<T>,
-    {
-        let target = spot.ln();
-        let centers = mesher.centers();
+// impl Solver {
+//     fn initialize_payoff<T, IC, M>(&self, initial_condition: IC, mesher: &M) -> Vec<T>
+//     where
+//         T: Real,
+//         IC: InitialConditions<T> + Copy,
+//         M: Mesher1d<T>,
+//     {
+//         (0..mesher.size())
+//             .map(|i| {
+//                 let s = mesher.location(i);
+//                 initial_condition.get_value(s)
+//             })
+//             .collect()
+//     }
 
-        let idx = match centers.binary_search_by(|val| {
-            val.scalar()
-                .partial_cmp(&target.scalar())
-                .expect("NaN in Grid")
-        }) {
-            Ok(exact) => return v[exact].clone(),
-            Err(i) => {
-                if i == 0 {
-                    return v[0].clone();
-                }
-                if i >= centers.len() {
-                    return v[v.len() - 1].clone();
-                }
-                i - 1
-            }
-        };
+//     fn interpolate<T, M>(&self, mesher: &M, v: &[T], spot: T) -> T
+//     where
+//         T: Real,
+//         M: Mesher1d<T>,
+//     {
+//         let target = spot.ln();
+//         let centers = mesher.centers();
 
-        let x0 = centers[idx];
-        let x1 = centers[idx + 1];
-        let weight = (target - x0) / (x1 - x0);
-        v[idx] + (weight * (v[idx + 1] - v[idx]))
-    }
-}
+//         let idx = match centers.binary_search_by(|val| {
+//             val.scalar()
+//                 .partial_cmp(&target.scalar())
+//                 .expect("NaN in Grid")
+//         }) {
+//             Ok(exact) => return v[exact].clone(),
+//             Err(i) => {
+//                 if i == 0 {
+//                     return v[0].clone();
+//                 }
+//                 if i >= centers.len() {
+//                     return v[v.len() - 1].clone();
+//                 }
+//                 i - 1
+//             }
+//         };
+
+//         let x0 = centers[idx];
+//         let x1 = centers[idx + 1];
+//         let weight = (target - x0) / (x1 - x0);
+//         v[idx] + (weight * (v[idx + 1] - v[idx]))
+//     }
+// }

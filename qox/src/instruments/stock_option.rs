@@ -1,14 +1,8 @@
 use crate::instruments::{Instrument, OptionInstrument, OptionType};
-use crate::methods::complementarity::brennan_schwartz::BrennanSchwartz;
-use crate::methods::constraints::american::AmericanConstraint;
-use crate::methods::finite_difference::free_boundary::projection::ProjectionConstrained;
-use crate::methods::finite_difference::free_boundary::unconstrained::Unconstrained;
 use crate::methods::finite_difference::meshers::uniform::UniformMesher1d;
 use crate::methods::finite_difference::solver::{FdmConfig, Solver};
-use crate::methods::obstacle_policies::ObstaclePolicy;
-use crate::methods::obstacle_policies::brennan_schwartz::BrennanSchwartzPolicy;
-use crate::methods::obstacle_policies::no_obstacle::NoObstaclePolicy;
-use crate::methods::obstacle_policies::post_projection::PostProjectionPolicy;
+use crate::methods::step_policy::linear_policy::LinearPolicy;
+use crate::methods::step_policy::unified_policy::UnifiedPolicy;
 use crate::methods::time_stepping::butcher_jackiewicz2::ButcherJackiewicz2;
 use crate::methods::time_stepping::input_vectors::InputVector;
 use crate::methods::transforms::log::LogTransform;
@@ -103,24 +97,29 @@ impl<T: Real> OptionInstrument<T, VanillaPayoff> for StockOption {
         let s_max = market_frame.spot_price() * T::from_f64(5.0);
         let mesher = UniformMesher1d::new(s_min.ln(), s_max.ln(), solver.config.nodes, transform);
 
-        let process = BlackScholesProcess::new(rate, vol, transform);
+        let process =
+            BlackScholesProcess::new(rate, vol, transform, DayCountConvention::Actual365Fixed);
         let stepper = ButcherJackiewicz2::new();
 
-        let obstacle_policy = PostProjectionPolicy {
-            constraint: AmericanConstraint::new(initial_conditions),
-        };
+        // let obstacle_policy = PostProjectionPolicy {
+        //     constraint: AmericanConstraint::new(initial_conditions),
+        // };
 
         let operator = process.build_operator(&mesher);
 
+        let policy = match self.exercise_style {
+            ExerciseStyle::European => UnifiedPolicy::Linear(LinearPolicy::new(&operator)),
+            ExerciseStyle::American => todo!(),
+        };
+
         let vector = solver.solve(
-            &operator,
             stepper,
             initial_conditions,
             &mesher,
             dt,
             solver.config,
             //market_frame.spot_price(),
-            NoObstaclePolicy,
+            &policy,
             //obstacle_policy,
         );
 

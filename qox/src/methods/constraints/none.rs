@@ -1,5 +1,5 @@
 use crate::{
-    methods::{constraints::Constraint, finite_difference::meshers::Mesher1d},
+    methods::{constraints::Constraint, finite_difference::meshers::SpatialGrid},
     types::Real,
 };
 
@@ -11,11 +11,11 @@ impl NoConstraint {
     }
 }
 
-impl<T: Real, M: Mesher1d<T>> Constraint<T, M> for NoConstraint {
+impl<T: Real, SG: SpatialGrid<T>> Constraint<T, SG> for NoConstraint {
     #[inline(always)]
-    fn apply(&self, _: &mut [T], _: &M) {}
+    fn apply(&self, _: &mut [T], _: &SG) {}
 
-    fn lower_bound(&self, _i: usize, _mesher: &M) -> T {
+    fn lower_bound(&self, _i: usize, _mesher: &SG) -> T {
         todo!()
     }
 }

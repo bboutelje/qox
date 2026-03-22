@@ -1,8 +1,9 @@
 use crate::{
     methods::{
-        complementarity::ComplementaritySolver, constraints::Constraint,
-        finite_difference::meshers::Mesher1d, linear_operators::LinearOperator,
-        linear_operators::tridiagonal_operator::TridiagonalOperator,
+        complementarity::ComplementaritySolver,
+        constraints::Constraint,
+        finite_difference::meshers::SpatialGrid,
+        linear_operators::{LinearOperator, tridiagonal_operator::TridiagonalOperator},
     },
     types::Real,
 };
@@ -15,19 +16,19 @@ impl BrennanSchwartz {
     }
 }
 
-impl<T, M, C> ComplementaritySolver<T, M, TridiagonalOperator<T>, C> for BrennanSchwartz
+impl<T, SG, C> ComplementaritySolver<T, SG, TridiagonalOperator<T>, C> for BrennanSchwartz
 where
     T: Real,
-    M: Mesher1d<T>,
-    C: Constraint<T, M>,
+    SG: SpatialGrid<T>,
+    C: Constraint<T, SG>,
 {
     fn solve(
         &self,
         op: &TridiagonalOperator<T>,
         rhs: &[T],
-        kappa: T,
+        dt: T,
         constraint: &C,
-        mesher: &M,
+        mesher: &SG,
         x: &mut [T],
     ) {
         let n = op.size();
@@ -37,14 +38,14 @@ where
         let mut rhs_star = vec![T::zero(); n];
 
         // 1. Forward Elimination
-        // We transform the system (I - kappa * L)x = rhs
-        d_star[0] = T::one() - kappa * op.diag[0];
+        // We transform the system (I - dt * L)x = rhs
+        d_star[0] = T::one() - dt * op.diag[0];
         rhs_star[0] = rhs[0];
 
         for i in 1..n {
-            let a_i = -kappa * op.lower[i];
-            let d_i = T::one() - kappa * op.diag[i];
-            let c_prev = -kappa * op.upper[i - 1];
+            let a_i = -dt * op.lower[i];
+            let d_i = T::one() - dt * op.diag[i];
+            let c_prev = -dt * op.upper[i - 1];
 
             let m = a_i / d_star[i - 1];
             d_star[i] = d_i - m * c_prev;
@@ -57,7 +58,7 @@ where
         x[n - 1] = (rhs_star[n - 1] / d_star[n - 1]).max(g_last);
 
         for i in (0..n - 1).rev() {
-            let c_i = -kappa * op.upper[i];
+            let c_i = -dt * op.upper[i];
             let g_i = constraint.lower_bound(i, mesher);
 
             // Standard back-substitution

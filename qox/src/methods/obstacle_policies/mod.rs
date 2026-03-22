@@ -5,14 +5,13 @@ pub mod no_obstacle;
 pub mod post_projection;
 pub mod psor;
 
-pub trait ObstaclePolicy<T, M, L> {
+pub trait ObstaclePolicy<T, SG, L> {
     fn solve_stage(
         &self,
         operator: &L,
         rhs: &[T],
-        coeff: T,
-        next_t: T,
-        mesher: &M,
+        dt: T,
+        grid: &SG,
         dest: &mut [T],
         z_buffer: &mut [T],
     );
@@ -21,8 +20,7 @@ pub trait ObstaclePolicy<T, M, L> {
         &self,
         operator: &L,
         stage_slice: &[T],
-        next_t: T,
-        mesher: &M,
+        grid: &SG,
         initial_conditions: IC,
         l_stage_slice: &mut [T],
     ) where

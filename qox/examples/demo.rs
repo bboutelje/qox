@@ -1,4 +1,5 @@
 use chrono::{Duration, Utc};
+use qox::core::period::DayCountConvention;
 use qox::instruments::{OptionInstrument, OptionType};
 use qox::{
     instruments::stock_option::StockOption,
@@ -13,8 +14,8 @@ pub fn main() {
     let stock_option = StockOption::new(
         100.0,
         Utc::now() + Duration::days(365),
-        OptionType::Put,
-        qox::instruments::stock_option::ExerciseStyle::American,
+        OptionType::Call,
+        qox::instruments::stock_option::ExerciseStyle::European,
     );
 
     let spot = 95.0;
@@ -23,7 +24,7 @@ pub fn main() {
 
     let market_frame = OptionMarketFrame::new(
         spot,
-        ContinuousRateCurve::new(rate),
+        ContinuousRateCurve::new(rate, DayCountConvention::Actual365Fixed),
         FlatVolSurface::new(vol),
     );
     let start = Instant::now();

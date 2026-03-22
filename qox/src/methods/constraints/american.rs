@@ -1,5 +1,5 @@
 use crate::{
-    methods::{constraints::Constraint, finite_difference::meshers::Mesher1d},
+    methods::{constraints::Constraint, finite_difference::meshers::SpatialGrid},
     traits::payoff::InitialConditions,
     types::Real,
 };
@@ -15,19 +15,19 @@ impl<IC> AmericanConstraint<IC> {
     }
 }
 
-impl<T: Real, IC: InitialConditions<T> + Copy, M: Mesher1d<T>> Constraint<T, M>
+impl<T: Real, IC: InitialConditions<T> + Copy, SG: SpatialGrid<T>> Constraint<T, SG>
     for AmericanConstraint<IC>
 {
     #[inline(always)]
-    fn apply(&self, price: &mut [T], mesher: &M) {
+    fn apply(&self, price: &mut [T], grid: &SG) {
         for i in 0..price.len() {
-            let p = self.payoff.get_value(mesher.location(i));
+            let p = self.payoff.get_value(grid.location(i));
             price[i] = price[i].max(p);
         }
     }
 
     #[inline(always)]
-    fn lower_bound(&self, i: usize, mesher: &M) -> T {
+    fn lower_bound(&self, i: usize, mesher: &SG) -> T {
         self.payoff.get_value(mesher.location(i))
     }
 }

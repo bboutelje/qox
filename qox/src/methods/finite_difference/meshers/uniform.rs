@@ -1,5 +1,8 @@
 use crate::{
-    methods::{finite_difference::meshers::Mesher1d, transforms::Transform},
+    methods::{
+        finite_difference::meshers::{Mesher1d, SpatialGrid},
+        transforms::Transform,
+    },
     types::Real,
 };
 
@@ -43,9 +46,6 @@ impl<T: Real, Tr: Transform<T>> UniformMesher1d<T, Tr> {
 }
 
 impl<T: Real, Tr: Transform<T>> Mesher1d<T> for UniformMesher1d<T, Tr> {
-    fn size(&self) -> usize {
-        self.centers.len()
-    }
     fn centers(&self) -> &[T] {
         &self.centers
     }
@@ -55,7 +55,12 @@ impl<T: Real, Tr: Transform<T>> Mesher1d<T> for UniformMesher1d<T, Tr> {
     fn h_minus(&self) -> &[T] {
         &self.h_minus
     }
+}
 
+impl<T: Real, Tr: Transform<T>> SpatialGrid<T> for UniformMesher1d<T, Tr> {
+    fn size(&self) -> usize {
+        self.centers.len()
+    }
     // Restore the mapping here
     fn location(&self, index: usize) -> T {
         self.transform.to_physical(self.centers[index])

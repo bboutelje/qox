@@ -1,4 +1,5 @@
 use crate::{
+    core::period::DayCountConvention,
     methods::{
         finite_difference::meshers::Mesher1d,
         linear_operators::tridiagonal_operator::TridiagonalOperator, transforms::Transform,
@@ -7,13 +8,14 @@ use crate::{
     types::Real,
 };
 
-pub struct BlackScholesProcess<T: Real, Tr: Transform<T>> {
+pub struct BlackScholesProcess<'a, T: Real, Tr: Transform<T>> {
     pub r: T,
     pub sigma: T,
     pub transform: Tr,
+    pub day_count_convention: DayCountConvention<'a>,
 }
 
-impl<T, M, Tr> FdmProcess<T, TridiagonalOperator<T>, M, Tr> for BlackScholesProcess<T, Tr>
+impl<'a, T, M, Tr> FdmProcess<T, TridiagonalOperator<T>, M, Tr> for BlackScholesProcess<'a, T, Tr>
 where
     T: Real,
     M: Mesher1d<T>,
@@ -70,12 +72,18 @@ where
     }
 }
 
-impl<T: Real, Tr: Transform<T>> BlackScholesProcess<T, Tr> {
-    pub fn new(rate: T, vol: T, transform: Tr) -> Self {
+impl<'a, T: Real, Tr: Transform<T>> BlackScholesProcess<'a, T, Tr> {
+    pub fn new(
+        rate: T,
+        vol: T,
+        transform: Tr,
+        day_count_convention: DayCountConvention<'a>,
+    ) -> Self {
         Self {
             r: rate,
             sigma: vol,
             transform,
+            day_count_convention,
         }
     }
 

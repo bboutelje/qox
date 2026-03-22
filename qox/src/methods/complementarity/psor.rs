@@ -2,7 +2,7 @@ use crate::{
     methods::{
         complementarity::ComplementaritySolver,
         constraints::Constraint,
-        finite_difference::meshers::Mesher1d,
+        finite_difference::meshers::SpatialGrid,
         linear_operators::{LinearOperator, tridiagonal_operator::TridiagonalOperator},
     },
     types::Real,
@@ -14,11 +14,11 @@ pub struct Psor {
     pub max_iter: usize,
 }
 
-impl<T, M, C> ComplementaritySolver<T, M, TridiagonalOperator<T>, C> for Psor
+impl<T, SG, C> ComplementaritySolver<T, SG, TridiagonalOperator<T>, C> for Psor
 where
     T: Real,
-    M: Mesher1d<T>,
-    C: Constraint<T, M>,
+    SG: SpatialGrid<T>,
+    C: Constraint<T, SG>,
 {
     fn solve(
         &self,
@@ -26,7 +26,7 @@ where
         rhs: &[T],
         kappa: T,
         constraint: &C,
-        mesher: &M,
+        mesher: &SG,
         x: &mut [T],
     ) {
         let n = op.size();

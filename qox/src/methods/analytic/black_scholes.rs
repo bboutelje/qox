@@ -3,7 +3,6 @@ use crate::types::Real;
 pub fn black_scholes<T: Real>(s: T, k: T, t: T, r: T, sigma: T, is_call: bool) -> T {
     let zero = T::zero();
     let half = T::from_f64(0.5);
-    let one = T::one();
 
     if t <= zero {
         return if is_call { s.max(k) - k } else { k.max(s) - s };
@@ -30,7 +29,6 @@ pub fn black_scholes<T: Real>(s: T, k: T, t: T, r: T, sigma: T, is_call: bool) -
 pub fn black_scholes_theta<T: Real>(s: T, k: T, t: T, r: T, sigma: T, is_call: bool) -> T {
     let zero = T::zero();
     let half = T::from_f64(0.5);
-    let one = T::one();
     let two = T::from_f64(2.0);
     let pi = T::from_f64(std::f64::consts::PI);
 

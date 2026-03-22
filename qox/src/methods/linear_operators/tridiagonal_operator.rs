@@ -9,10 +9,7 @@ struct TridiagonalCache<T> {
     m_inv: Vec<T>,
 }
 
-pub struct TridiagonalOperator<T>
-where
-    T: Real,
-{
+pub struct TridiagonalOperator<T> {
     pub lower: Vec<T>,
     pub diag: Vec<T>,
     pub upper: Vec<T>,
@@ -43,7 +40,7 @@ impl<T: Real> LinearOperator<T> for TridiagonalOperator<T> {
         self.diag.len()
     }
 
-    fn apply_into(&self, v: &[T], _t: T, out: &mut [T]) {
+    fn apply_into(&self, v: &[T], out: &mut [T]) {
         let n = self.size();
         if n == 0 {
             return;
@@ -111,7 +108,7 @@ impl<T: Real> LinearOperator<T> for TridiagonalOperator<T> {
         });
     }
 
-    fn solve_inverse_into(&self, b: &[T], _coeff: T, _t: T, dest: &mut [T], z_buffer: &mut [T]) {
+    fn solve_inverse_into(&self, b: &[T], dest: &mut [T], z_buffer: &mut [T]) {
         let cache = self.cache.borrow();
         let c = cache
             .as_ref()

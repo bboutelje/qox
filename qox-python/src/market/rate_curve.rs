@@ -1,10 +1,11 @@
-use pyo3::prelude::*;
-use pyo3::exceptions::PyValueError;
 use chrono::NaiveDate;
+use pyo3::exceptions::PyValueError;
+use pyo3::prelude::*;
 use qox::core::{period::DefaultPeriodCalculator, rate::InterestRate, tenor::Tenor};
-use qox::traits::rate_curve::RateCurve; 
 use qox::market::rate_curve::{ContinuousRateCurve, FlatRateCurve, InterpolatedRateCurve};
+use qox::traits::rate_curve::RateCurve;
 
+use crate::core::day_count::PyDayCountConvention;
 use crate::core::{rate::PyInterestRate, tenor::PyTenor};
 
 #[derive(Clone)]
@@ -49,9 +50,12 @@ impl PyRateCurve {
     }
 
     #[staticmethod]
-    pub fn continuous(value: f64) -> Self {
+    pub fn continuous(value: f64, day_count_convention: PyDayCountConvention) -> Self {
         Self {
-            inner: RateCurveEnum::Continuous(ContinuousRateCurve::new(value)),
+            inner: RateCurveEnum::Continuous(ContinuousRateCurve::new(
+                value,
+                day_count_convention.into(),
+            )),
         }
     }
 
@@ -60,18 +64,18 @@ impl PyRateCurve {
         reference_date: NaiveDate,
         tenors: Vec<PyTenor>,
         // Similarly update the rates argument
-        rates: Vec<PyRef<'_, PyInterestRate>>, 
+        rates: Vec<PyRef<'_, PyInterestRate>>,
     ) -> PyResult<Self> {
         let rust_tenors: Vec<Tenor> = tenors.into_iter().map(|t| t.inner).collect();
         // Access inner via the PyRef
-        let rust_rates: Vec<InterestRate<'static, f64>> = rates.into_iter()
-            .map(|r| r.inner.clone())
-            .collect();
-        
-        let calculator = DefaultPeriodCalculator; 
+        let rust_rates: Vec<InterestRate<'static, f64>> =
+            rates.into_iter().map(|r| r.inner.clone()).collect();
 
-        let curve = InterpolatedRateCurve::new(reference_date, rust_tenors, rust_rates, &calculator)
-            .map_err(|e| PyValueError::new_err(format!("Curve Error: {:?}", e)))?;
+        let calculator = DefaultPeriodCalculator;
+
+        let curve =
+            InterpolatedRateCurve::new(reference_date, rust_tenors, rust_rates, &calculator)
+                .map_err(|e| PyValueError::new_err(format!("Curve Error: {:?}", e)))?;
 
         Ok(Self {
             inner: RateCurveEnum::Interpolated(curve),

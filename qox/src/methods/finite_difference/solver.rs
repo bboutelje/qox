@@ -1,16 +1,14 @@
 use crate::{
     methods::{
-        finite_difference::meshers::Mesher1d,
+        finite_difference::meshers::{Mesher1d, SpatialGrid},
         linear_operators::LinearOperator,
-        obstacle_policies::ObstaclePolicy,
+        step_policy::StepPolicy,
         time_stepping::{
             TimeStepper,
             glm::GlmWorkspace,
             input_vectors::{InputVector, nordsieck_vector::NordsieckVector},
         },
-        transforms::Transform,
     },
-    processes::FdmProcess,
     traits::payoff::InitialConditions,
     types::Real,
 };
@@ -26,36 +24,34 @@ pub struct FdmConfig {
 }
 
 impl Solver {
-    pub fn solve<T, L, M, Step, IC, OP, const S: usize, const R: usize>(
+    pub fn solve<T, L, SG, Step, IC, SP, const S: usize, const R: usize>(
         &self,
-        operator: &L,
         stepper: Step,
         initial_conditions: IC,
-        mesher: &M,
+        grid: &SG,
         dt: T,
         config: FdmConfig,
-        obstacle_policy: OP,
+        step_policy: &SP,
     ) -> NordsieckVector<T>
     where
         T: Real,
-        //Tr: Transform<T> + Copy,
-        M: Mesher1d<T>,
+        SG: SpatialGrid<T>,
         Step: TimeStepper<T, NordsieckVector<T>, S, R>,
         L: LinearOperator<T>,
         IC: InitialConditions<T> + Copy,
-        OP: ObstaclePolicy<T, M, L>,
+        SP: StepPolicy<T, SG, L>,
     {
         let mut vector = NordsieckVector::<T>::new(R, config.nodes, T::zero());
         let mut workspace = GlmWorkspace::<T>::new(S, config.nodes);
 
-        let initial_v = self.initialize_payoff(initial_conditions, mesher);
+        let initial_v = self.initialize_payoff(initial_conditions, grid);
 
         vector.step_slice_mut(0).copy_from_slice(&initial_v);
 
         let n = self.config.nodes;
         if R > 1 {
             let (y_slice, f_slice) = vector.items.split_at_mut(n);
-            operator.apply_into(y_slice, T::zero(), f_slice);
+            step_policy.get_operator().apply_into(y_slice, f_slice);
         }
 
         for _ in 0..config.time_steps {
@@ -72,26 +68,22 @@ impl Solver {
                 );
 
                 let stage_coeff = stepper.tableau().a[i][i] * dt;
-                operator.setup_coeff(stage_coeff);
+                step_policy.get_operator().setup_coeff(stage_coeff);
 
                 let stage_slice = &mut workspace.stages[i * n..(i + 1) * n];
 
-                obstacle_policy.solve_stage(
-                    &operator,
+                step_policy.solve_stage_into(
                     &workspace.rhs_buffer,
-                    stage_coeff,
-                    next_t,
-                    &mesher,
+                    dt,
+                    &grid,
                     stage_slice,
                     &mut workspace.z_buffer,
                 );
 
                 let l_stage_slice = &mut workspace.l_stages[i * n..(i + 1) * n];
-                obstacle_policy.compute_stage_derivative(
-                    &operator,
+                step_policy.compute_stage_derivative(
                     stage_slice,
-                    next_t,
-                    &mesher,
+                    &grid,
                     initial_conditions,
                     l_stage_slice,
                 );
@@ -105,15 +97,15 @@ impl Solver {
         //self.interpolate(&mesher, vector.step_slice(0), spot)
     }
 
-    fn initialize_payoff<T, IC, M>(&self, initial_condition: IC, mesher: &M) -> Vec<T>
+    fn initialize_payoff<T, IC, SG>(&self, initial_condition: IC, spatial_grid: &SG) -> Vec<T>
     where
         T: Real,
         IC: InitialConditions<T> + Copy,
-        M: Mesher1d<T>,
+        SG: SpatialGrid<T>,
     {
-        (0..mesher.size())
+        (0..spatial_grid.size())
             .map(|i| {
-                let s = mesher.location(i);
+                let s = spatial_grid.location(i);
                 initial_condition.get_value(s)
             })
             .collect()

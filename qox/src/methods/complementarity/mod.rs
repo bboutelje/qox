@@ -1,6 +1,6 @@
 use crate::{
     methods::{
-        constraints::Constraint, finite_difference::meshers::Mesher1d,
+        constraints::Constraint, finite_difference::meshers::SpatialGrid,
         linear_operators::LinearOperator,
     },
     types::Real,
@@ -9,12 +9,12 @@ use crate::{
 pub mod brennan_schwartz;
 pub mod psor;
 
-pub trait ComplementaritySolver<T, M, L, C>
+pub trait ComplementaritySolver<T, SG, L, C>
 where
     T: Real,
-    M: Mesher1d<T>,
+    SG: SpatialGrid<T>,
     L: LinearOperator<T>,
-    C: Constraint<T, M>,
+    C: Constraint<T, SG>,
 {
     fn solve(
         &self,
@@ -22,7 +22,7 @@ where
         rhs: &[T],
         kappa: T,
         constraint: &C,
-        mesher: &M,
+        grid: &SG,
         solution: &mut [T],
     );
 }

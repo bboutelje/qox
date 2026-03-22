@@ -1,4 +1,4 @@
-use chrono::{NaiveDate, Datelike};
+use chrono::{Datelike, NaiveDate};
 
 use crate::traits::calendar::Calendar;
 
@@ -22,10 +22,9 @@ pub enum DayCountConvention<'a> {
 
 impl<'a> DayCountConvention<'a> {}
 
-
 // #[derive(Debug, Clone, Copy)]
 // pub enum DayCountMethod<'a> {
-//     /// Pure calendar math. No adjustments. 
+//     /// Pure calendar math. No adjustments.
 //     /// Used for most options and simple interest.
 //     Standard(DayCountBasis<'a>),
 
@@ -79,7 +78,7 @@ impl BusinessDayConvention {
                 } else {
                     next
                 }
-            },
+            }
             Self::ModifiedPreceding => {
                 let prev = Self::Preceding.adjust(date, cal);
                 if prev.month() != date.month() {
@@ -91,4 +90,3 @@ impl BusinessDayConvention {
         }
     }
 }
-

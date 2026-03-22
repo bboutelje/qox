@@ -8,12 +8,12 @@ pub struct NordsieckVector<T> {
 }
 
 impl<T: Real> NordsieckVector<T> {
-    pub(crate) fn new(r: usize, nodes: usize, zero: T) -> Self {
+    pub(crate) fn new(r: usize, nodes: usize, time: T) -> Self {
         Self {
-            items: vec![zero; r * nodes],
+            items: vec![time; r * nodes],
             r,
             n: nodes,
-            current_time: zero,
+            current_time: time,
         }
     }
 }

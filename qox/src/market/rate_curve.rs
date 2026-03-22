@@ -106,13 +106,13 @@ pub struct ContinuousRateCurve<'a, T: Real> {
 impl<'a, T: Real> ContinuousRateCurve<'a, T> {
     /// Creates a new curve from a raw T value.
     /// Internal InterestRate is set to Continuous compounding.
-    pub fn new(value: T) -> Self {
+    pub fn new(value: T, day_count_convention: DayCountConvention<'a>) -> Self {
         Self {
             rate: InterestRate {
-                value: value, // Automatically converts here
+                value: value,
                 compounding: Compounding::Continuous,
                 frequency: Frequency::Infinite,
-                convention: DayCountConvention::Actual365Fixed,
+                convention: day_count_convention,
             },
         }
     }
