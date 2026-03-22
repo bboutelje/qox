@@ -5,8 +5,6 @@ pub mod market;
 pub mod math;
 pub mod methods;
 pub mod processes;
-pub mod processes_old;
-pub mod solvers_old;
 pub mod traits;
 pub mod types;
 

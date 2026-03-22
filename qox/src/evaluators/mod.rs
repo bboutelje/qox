@@ -9,10 +9,10 @@ pub struct Greeks {
 
 pub enum GreekRequest {
     Price,
-    FirstOrder
+    FirstOrder,
 }
 
+pub mod analytic;
+pub mod black_scholes;
 pub mod fdm;
 pub mod fdm_log;
-pub mod black_scholes;
-pub mod analytic;
